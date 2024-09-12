@@ -92,11 +92,6 @@ class Reportes:
         self.estado= 0
 
 
-def pr_limpiar_consola():
-    os.system("cls")
-
-def pr_pausar_consola():
-    os.system("pause")
 def pr_crear_titulo(titulo:str):
     columnas="" 
     
@@ -209,21 +204,21 @@ def pr_tabla(colsDate:list[str],data:list[str]):
     print(pared)
 
 def lj_estudiantes(x:Estudiantes):
-    x.id_estudiantes=str(x.id_estudiantes).ljust(10) # Entero
+    x.id_estudiantes=str(x.id_estudiantes).ljust(10).lower() # Entero
     x.email=str(x.email).ljust(32).lower()
-    x.nombre=str(x.nombre).ljust(32)
+    x.nombre=str(x.nombre).ljust(32).lower()
     x.sexo=str(x.sexo).ljust(1).lower()
-    x.contrasena=str(x.contrasena).ljust(32)
-    x.estado=str(x.estado).ljust(10) #Booleano
-    x.hobbies=str(x.hobbies).ljust(255)
-    x.materia_favorita=str(x.materia_favorita).ljust(16)
-    x.deporte_favorito=str(x.deporte_favorito).ljust(16)
-    x.materia_fuerte=str(x.materia_fuerte).ljust(16)
-    x.materia_debil=str(x.materia_debil).ljust(16)
-    x.biografia=str(x.biografia).ljust(255)
-    x.pais=str(x.pais).ljust(32)
-    x.ciudad=str(x.ciudad).ljust(32)
-    x.fecha_nacimiento=str(x.fecha_nacimiento).ljust(10)
+    x.contrasena=str(x.contrasena).ljust(32).lower()
+    x.estado=str(x.estado).ljust(10).lower() #Booleano
+    x.hobbies=str(x.hobbies).ljust(255).lower() 
+    x.materia_favorita=str(x.materia_favorita).ljust(16).lower()
+    x.deporte_favorito=str(x.deporte_favorito).ljust(16).lower()
+    x.materia_fuerte=str(x.materia_fuerte).ljust(16).lower()
+    x.materia_debil=str(x.materia_debil).ljust(16).lower()
+    x.biografia=str(x.biografia).ljust(255).lower()
+    x.pais=str(x.pais).ljust(32).lower()
+    x.ciudad=str(x.ciudad).ljust(32).lower()
+    x.fecha_nacimiento=str(x.fecha_nacimiento).ljust(10).lower()
 
 def lj_moderadores(x:Moderadores):
     x.id_moderador = str(x.id_moderador).ljust(10).lower() #Entero
@@ -251,13 +246,17 @@ def pr_cartel_construccion():
     print("\nOpcion en construccion...\n")
 
 
-def fn_guardar_datos(registro:object,ARCHIVO_LOGICO:io.BufferedRandom,ARCHIVO_FISICO:str,formateador,posicion:int = -1):
+
+
+
+
+
+def fn_guardar_datos(registro:object,ARCHIVO_LOGICO:io.BufferedRandom,ARCHIVO_FISICO:str,formateador,posicion:int = 0):
     """ Guarda el registro en su respectivo archivo """
-    t = os.path.getsize(ARCHIVO_FISICO)
     try:
-        
-        if (posicion) == -1:
-            posicion = t
+
+        if (posicion) == 0:
+            posicion = os.path.getsize(ARCHIVO_FISICO)
 
         ARCHIVO_LOGICO.seek(posicion)
 
@@ -270,29 +269,29 @@ def fn_guardar_datos(registro:object,ARCHIVO_LOGICO:io.BufferedRandom,ARCHIVO_FI
         print("Se genero un error")
 
 
-def fn_buscar_cantidad_de_registros(ARCHIVO_LOGICO:io.BufferedRandom,ARCHIVO_FISICO:str):
-    cantidad = 0   
-    if(os.path.getsize(ARCHIVO_FISICO) != 0):
-        ARCHIVO_LOGICO.seek(0)
-        pickle.load(ARCHIVO_LOGICO)
-        longitud_reg = ARCHIVO_LOGICO.tell()
-        t = os.path.getsize(ARCHIVO_FISICO) 
-        
-        cantidad = t//longitud_reg
-    ARCHIVO_LOGICO.seek(0)
-    return cantidad
-        
+
+
 
 def pr_inicializar_programa():
-    administradores = [["pepe@gmail.com","pepe"],["pedro@gmail.com","pepe"],["lorenzo@gmail.com","pepe"]]
+    admin = Administradores()
 
-    for i in range(0,len(administradores)):
-        admin = Administradores()
-        admin.email = administradores[i][0]
-        admin.contrasena= administradores[i][1]
-        admin.id_admin = fn_buscar_cantidad_de_registros(LOGICO_ARCHIVO_ADMINISTRADORES,FISICO_ARCHIVO_ADMINISTRADORES)
-        fn_guardar_datos(admin,LOGICO_ARCHIVO_ADMINISTRADORES,FISICO_ARCHIVO_ADMINISTRADORES,lj_administradores)
+    admin.email = "pepe@gmail.com"
+    admin.contrasena= "pepe"
+    admin.id_admin= "2"
+    lj_administradores(admin)
+    TEST=LOGICO_ARCHIVO_ADMINISTRADORES.tell()
+    print(TEST)
+
+    t = os.path.getsize(FISICO_ARCHIVO_ADMINISTRADORES)
+    LOGICO_ARCHIVO_ADMINISTRADORES.seek(t)
+    pickle.dump(admin,LOGICO_ARCHIVO_ADMINISTRADORES)
+    LOGICO_ARCHIVO_ADMINISTRADORES.flush()
+    TEST=LOGICO_ARCHIVO_ADMINISTRADORES.tell()
+    print(TEST)
     
+
+    
+
 
 
 def ver():
@@ -304,36 +303,5 @@ def ver():
         while LOGICO_ARCHIVO_ADMINISTRADORES.tell() < t:
             reg = pickle.load(LOGICO_ARCHIVO_ADMINISTRADORES)
             print(reg.id_admin)
-            print(reg.id_admin)
-            print(reg.id_admin)
-
-#ver()
-#def buscarEstudiante(id_estudiantes)
-#  t = os.path.getsize(afEstudiantes)
-#   alEstudiantes.seek(0,0)
-#   while alEstudiantes.tell()<t:
-#       pos = alEstudiantes.tell()
-#       vrTemp = pickle.load(alEstudiantes)
-#       if vrTemp.id_estudiantes == id_estudiantes:
-#           return pos
-#   return -1 
-
-
-def pr_menu_principal(titulo:str):
-        pr_crear_titulo("Inicio")
-        print("1. Registrarse ")
-        print("2. Logearse 2")
-        print("3. Pépe 3")
-        print("4. Salir")
-
-def opcion1():
-    print("\nHas seleccionado la Opción 1")
-
-
-
-def pr_registrarse():
-    ""
-def pr_logearse():
-    ""
-
-pr_menu_principal(1)
+           
+ver()
