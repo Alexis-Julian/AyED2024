@@ -319,15 +319,15 @@ def ver():
 #   return -1 
 
 
-def pr_menu_principal(titulo:str):
+"""def pr_menu_principal(titulo:str):
         pr_crear_titulo("Inicio")
-        print("1. Registrarse ")
-        print("2. Logearse 2")
-        print("3. Pépe 3")
+        print("1. Registrarse")
+        print("2. Logearse")
+        print("3. Pépe")
         print("4. Salir")
 
 def opcion1():
-    print("\nHas seleccionado la Opción 1")
+    print("\nHas seleccionado la Opción 1")"""
 
 
 
@@ -335,5 +335,41 @@ def pr_registrarse():
     ""
 def pr_logearse():
     ""
+def pr_registrar_moderadores():
+    ""
 
-pr_menu_principal(1)
+
+def inicializacion():
+    global intento_login
+    pr_registrarse()
+    pr_logearse()
+    pr_limpiar_consola()
+    pr_crear_titulo("Bienvenido, ¿buscando al compañero ideal?  ")
+    print("\n1-Iniciar sesion\n\n2-Registrarse\n\n0-Salir\n\n")
+    
+    opc = fn_validar_rango(0, 4)
+    while opc != 0:
+        if(opc == 1):
+            if not pr_logearse():
+                pr_limpiar_consola()
+                pr_crear_titulo("Bienvenido, ¿buscando al compañero ideal?  ")
+                print("\n1-Iniciar sesion\n\n2-Registrarse\n\n0-Salir\n\n")
+        elif (opc == 2):
+            if  pr_registrarse():
+                pr_limpiar_consola()
+                pr_crear_titulo("Cuenta creada con exito")
+                print("\n1-Iniciar sesion\n\n2-Registrarse\n\n0-Salir\n\n")
+        elif (opc==3):
+            if pr_registrar_moderadores():
+                pr_limpiar_consola()
+                pr_crear_titulo("Cuenta con poder creada con exito")
+                print("\n1-Iniciar sesion\n\n2-Registrarse\n\n0-Salir\n\n")
+        if(intento_login == 3):
+            pr_limpiar_consola()
+            print('\nSe ha quedado sin intentos.')
+            opc = 0
+        else:
+            opc = fn_validar_rango(0, 3)
+    
+    print("\nSaliendo del programa.\n")
+inicializacion()
