@@ -9,44 +9,6 @@ import getpass
 from typing import Callable
 
 
-def fn_crear_logico(ruta: str):
-    archivo_logico = None  # Inicialización explícita
-    
-    if os.path.exists(ruta):
-        archivo_logico = open(ruta, "r+b")  # Abre para lectura y escritura binaria
-    else:
-        archivo_logico = open(ruta, "w+b")  # Crea un archivo nuevo y lo abre en modo binario
-    
-    return archivo_logico
-
-
-def fn_cerrar_logico():
-    LOGICO_ARCHIVO_ESTUDIANTES.close()
-    LOGICO_ARCHIVO_MODERADORES.close()
-    LOGICO_ARCHIVO_REPORTES.close()
-    LOGICO_ARCHIVO_LIKES.close()
-    LOGICO_ARCHIVO_ADMINISTRADORES.close()
-
-
-if(not(os.path.exists("archivos"))):
-    os.mkdir(os.getcwd() + "/archivos")
-    
-if(os.path.exists("archivos")):
-    #Archivo fiscos
-    FISICO_ARCHIVO_ESTUDIANTES= os.getcwd() + "/archivos/estudiantes.dat" 
-    FISICO_ARCHIVO_MODERADORES= os.getcwd() + "/archivos/moderadores.dat" 
-    FISICO_ARCHIVO_REPORTES= os.getcwd() + "/archivos/reportes.dat"
-    FISICO_ARCHIVO_LIKES= os.getcwd() + "/archivos/likes.dat"
-    FISICO_ARCHIVO_ADMINISTRADORES= os.getcwd() + "/archivos/administradores.dat"
-
-    LOGICO_ARCHIVO_ESTUDIANTES= fn_crear_logico(FISICO_ARCHIVO_ESTUDIANTES) 
-    LOGICO_ARCHIVO_MODERADORES= fn_crear_logico(FISICO_ARCHIVO_MODERADORES) 
-    LOGICO_ARCHIVO_REPORTES= fn_crear_logico(FISICO_ARCHIVO_REPORTES)
-    LOGICO_ARCHIVO_LIKES= fn_crear_logico(FISICO_ARCHIVO_LIKES)
-    LOGICO_ARCHIVO_ADMINISTRADORES= fn_crear_logico(FISICO_ARCHIVO_ADMINISTRADORES)
-
-
-
 class Estudiantes:
     def __init__(self):
         self.id_estudiantes= 0
@@ -65,6 +27,21 @@ class Estudiantes:
         self.ciudad=""
         self.fecha_nacimiento=""
 
+class Usuario:
+    def __init__(self):
+        self.id_usuario = 0
+        self.email = ""
+        self.nombre= ""
+        self.sexo= ""
+        self.hobbies = ""
+        self.materia_favorita=""
+        self.deporte_favorito=""
+        self.materia_fuerte=""
+        self.materia_debil=""
+        self.biografia=""
+        self.pais=""
+        self.ciudad=""
+        self.fecha_nacimiento=""
 
 class Moderadores:
     def __init__(self):
@@ -92,11 +69,49 @@ class Reportes:
         self.estado= 0
 
 
+def fn_crear_logico(ruta: str):
+    archivo_logico:io.BufferedRandom  # Inicialización explícita
+    
+    if os.path.exists(ruta):
+        archivo_logico = open(ruta, "r+b")  # Abre para lectura y escritura binaria
+    else:
+        archivo_logico = open(ruta, "w+b")  # Crea un archivo nuevo y lo abre en modo binario
+    
+    return archivo_logico
+
+
+if(not(os.path.exists("archivos"))):
+    os.mkdir(os.getcwd() + "/archivos")
+    
+if(os.path.exists("archivos")):
+    #Archivo fiscos
+    FISICO_ARCHIVO_ESTUDIANTES= os.getcwd() + "/archivos/estudiantes.dat" 
+    FISICO_ARCHIVO_MODERADORES= os.getcwd() + "/archivos/moderadores.dat" 
+    FISICO_ARCHIVO_REPORTES= os.getcwd() + "/archivos/reportes.dat"
+    FISICO_ARCHIVO_LIKES= os.getcwd() + "/archivos/likes.dat"
+    FISICO_ARCHIVO_ADMINISTRADORES= os.getcwd() + "/archivos/administradores.dat"
+
+    LOGICO_ARCHIVO_ESTUDIANTES= fn_crear_logico(FISICO_ARCHIVO_ESTUDIANTES) 
+    LOGICO_ARCHIVO_MODERADORES= fn_crear_logico(FISICO_ARCHIVO_MODERADORES) 
+    LOGICO_ARCHIVO_REPORTES= fn_crear_logico(FISICO_ARCHIVO_REPORTES)
+    LOGICO_ARCHIVO_LIKES= fn_crear_logico(FISICO_ARCHIVO_LIKES)
+    LOGICO_ARCHIVO_ADMINISTRADORES= fn_crear_logico(FISICO_ARCHIVO_ADMINISTRADORES)
+
+
+def fn_cerrar_logico():
+    LOGICO_ARCHIVO_ESTUDIANTES.close()
+    LOGICO_ARCHIVO_MODERADORES.close()
+    LOGICO_ARCHIVO_REPORTES.close()
+    LOGICO_ARCHIVO_LIKES.close()
+    LOGICO_ARCHIVO_ADMINISTRADORES.close()
+
+
 def pr_limpiar_consola():
     os.system("cls")
 
 def pr_pausar_consola():
     os.system("pause")
+
 def pr_crear_titulo(titulo:str):
     columnas="" 
     
@@ -164,6 +179,7 @@ def fn_text_format(data:str,length:int):
     else:
         aux=data
     return aux
+
 
 
 "var:numerColsDate,columnas,filas,space=tipo interger"
@@ -246,25 +262,19 @@ def lj_reportes(x:Reportes):
     x.razon_reporte = str(x.razon_reporte).ljust(255).lower() 
     x.estado = str(x.id_reportado).ljust(10).lower() #Entero
 
-
 def pr_cartel_construccion():
     print("\nOpcion en construccion...\n")
-
 
 def fn_guardar_datos(registro:object,ARCHIVO_LOGICO:io.BufferedRandom,ARCHIVO_FISICO:str,formateador,posicion:int = -1):
     """ Guarda el registro en su respectivo archivo """
     t = os.path.getsize(ARCHIVO_FISICO)
-    try:
-        
+    try:        
         if (posicion) == -1:
             posicion = t
 
         ARCHIVO_LOGICO.seek(posicion)
-
         formateador(registro) 
-    
         pickle.dump(registro,ARCHIVO_LOGICO)
-
         ARCHIVO_LOGICO.flush()
     except:
         print("Se genero un error")
@@ -283,6 +293,62 @@ def fn_buscar_cantidad_de_registros(ARCHIVO_LOGICO:io.BufferedRandom,ARCHIVO_FIS
     return cantidad
         
 
+
+def busquedadico(data:str, ARCHIVO_LOGICO:io.BufferedRandom, ARCHIVO_FISICO:str,funcion:function):
+    ARCHIVO_LOGICO.seek(0, 0)
+    registro = pickle.load(ARCHIVO_LOGICO)
+    tamregi = ARCHIVO_LOGICO.tell()
+    cantreg = int(os.path.getsize(ARCHIVO_FISICO) / tamregi)
+    inicio = 0                 
+    fin = cantreg-1
+    medio = (inicio + fin) // 2
+    ARCHIVO_LOGICO.seek(medio * tamregi,0) 
+    registro = pickle.load(ARCHIVO_LOGICO)
+
+    while inicio <  fin and str(funcion(registro)).strip() != str(data).strip() :
+
+        if str((funcion(registro))).strip()  < str(data).strip():
+            fin = medio - 1
+        else:
+            inicio = medio + 1            
+        
+        medio = (inicio + fin) // 2
+        ARCHIVO_LOGICO.seek(medio * tamregi,0)  #tamregi   
+        registro = pickle.load(ARCHIVO_LOGICO)
+    if(int(funcion(registro) == data)):
+        return medio*tamregi
+    else:
+        return -1
+
+
+
+
+
+
+
+
+
+def busquedasecuencial(
+    ARCHIVO_LOGICO: io.BufferedRandom, ARCHIVO_FISICO: str, callback
+) :
+    """ def busqueeda_especifica(regtemp,pos):
+        if str(regtemp.propiedad).strip() == 'valor':
+            localesActivos.append(regtemp)         
+            return False """
+
+    tamañoarchivo = os.path.getsize(ARCHIVO_FISICO)
+    ARCHIVO_LOGICO.seek(0)
+    encontrado = False
+
+    while ARCHIVO_LOGICO.tell() < tamañoarchivo and encontrado == False:
+        posicion = ARCHIVO_LOGICO.tell()
+        regtemporal = pickle.load(ARCHIVO_LOGICO)
+        encontrado = callback(regtemporal, posicion)
+
+    return encontrado
+
+
+
 def pr_inicializar_programa():
     administradores = [["pepe@gmail.com","pepe"],["pedro@gmail.com","pepe"],["lorenzo@gmail.com","pepe"]]
 
@@ -293,7 +359,6 @@ def pr_inicializar_programa():
         admin.id_admin = fn_buscar_cantidad_de_registros(LOGICO_ARCHIVO_ADMINISTRADORES,FISICO_ARCHIVO_ADMINISTRADORES)
         fn_guardar_datos(admin,LOGICO_ARCHIVO_ADMINISTRADORES,FISICO_ARCHIVO_ADMINISTRADORES,lj_administradores)
     
-
 
 def ver():
         reg:Administradores
@@ -307,33 +372,30 @@ def ver():
             print(reg.id_admin)
             print(reg.id_admin)
 
-#ver()
-#def buscarEstudiante(id_estudiantes)
-#  t = os.path.getsize(afEstudiantes)
-#   alEstudiantes.seek(0,0)
-#   while alEstudiantes.tell()<t:
-#       pos = alEstudiantes.tell()
-#       vrTemp = pickle.load(alEstudiantes)
-#       if vrTemp.id_estudiantes == id_estudiantes:
-#           return pos
-#   return -1 
 
+def fn_busqueda_secuencial():
+    print("2")
 
-def pr_menu_principal(titulo:str):
-        pr_crear_titulo("Inicio")
-        print("1. Registrarse ")
-        print("2. Logearse 2")
-        print("3. Pépe 3")
-        print("4. Salir")
+    return False # Elemento no encontrado
 
-def opcion1():
-    print("\nHas seleccionado la Opción 1")
-
-
-
-def pr_registrarse():
-    ""
-def pr_logearse():
+def fn_falso_burbuja():
     ""
 
-pr_menu_principal(1)
+""" def pr_editar_datos_personales():
+    pr_crear_titulo("Gestionar perfil")
+    print("Ingrese que desea modificar")
+    print("Nombre")
+    print("Sexo")
+    print("Estado")
+    print("Hobbies")
+    print("Materia Favorita")
+    print("Deporte Favorito")
+    print("Materia Fuerte")
+    print("Materia Debil")
+    print("Biografia")
+    print("Pais")
+    print("Ciudad")
+    print("Fecha de nacimiento")
+ """
+
+fn_cerrar_logico()
