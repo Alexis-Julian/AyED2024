@@ -9,6 +9,13 @@ import getpass
 from typing import Callable
 
 
+#--------------------------------------------------------------#
+#                                                              #
+#                CLASES                                        #
+#                                                              #
+#--------------------------------------------------------------#
+
+
 class Estudiantes:
     def __init__(self):
         self.id_estudiantes= 0
@@ -69,6 +76,13 @@ class Reportes:
         self.estado= 0
 
 
+
+#--------------------------------------------------------------#
+#                                                              #
+#                ARCHIVOS                                      #
+#                                                              #
+#--------------------------------------------------------------#
+
 def fn_crear_logico(ruta: str):
     archivo_logico:io.BufferedRandom  # Inicialización explícita
     
@@ -106,28 +120,54 @@ def fn_cerrar_logico():
     LOGICO_ARCHIVO_ADMINISTRADORES.close()
 
 
-def pr_limpiar_consola():
-    os.system("cls")
+#--------------------------------------------------------------#
+#                                                              #
+#                FORMATEADORES                                 #
+#                                                              #
+#--------------------------------------------------------------#
+def lj_estudiantes(x:Estudiantes):
+    x.id_estudiantes=str(x.id_estudiantes).ljust(10) # Entero
+    x.email=str(x.email).ljust(32).lower()
+    x.nombre=str(x.nombre).ljust(32)
+    x.sexo=str(x.sexo).ljust(1).lower()
+    x.contrasena=str(x.contrasena).ljust(32)
+    x.estado=str(x.estado).ljust(10) #Booleano
+    x.hobbies=str(x.hobbies).ljust(255)
+    x.materia_favorita=str(x.materia_favorita).ljust(16)
+    x.deporte_favorito=str(x.deporte_favorito).ljust(16)
+    x.materia_fuerte=str(x.materia_fuerte).ljust(16)
+    x.materia_debil=str(x.materia_debil).ljust(16)
+    x.biografia=str(x.biografia).ljust(255)
+    x.pais=str(x.pais).ljust(32)
+    x.ciudad=str(x.ciudad).ljust(32)
+    x.fecha_nacimiento=str(x.fecha_nacimiento).ljust(10)
 
-def pr_pausar_consola():
-    os.system("pause")
+def lj_moderadores(x:Moderadores):
+    x.id_moderador = str(x.id_moderador).ljust(10).lower() #Entero
+    x.email = str(x.email).ljust(32).lower()
+    x.contrasena = str(x.contrasena).ljust(32).lower()
+    x.estado = str(x.estado).ljust(10).lower() #Booleano
 
-def pr_crear_titulo(titulo:str):
-    columnas="" 
-    
-    cantidadLetra:int = len(titulo) # ES LA CANTIDAD DE LETRAS QUE TIENE EL TITULO
-    columnaTamano:int = os.get_terminal_size().columns
+def lj_administradores(x:Administradores):
+    x.id_admin = str(x.id_admin).ljust(10).lower() #Entero
+    x.email = str(x.email).ljust(32).lower() 
+    x.contrasena = str(x.contrasena).ljust(32).lower()
 
-    for i in range(0,columnaTamano):
-        columnas= columnas + "_"
-    
-    copiarColumnas = (columnaTamano - cantidadLetra )//2
+def lj_likes(x:Likes):
+    x.destinatario=str(x.destinatario).ljust(10).lower() #Entero
+    x.remitente=str(x.remitente).ljust(10).lower() #Entero
 
-    print(columnas)
-    print("\n" + " " * copiarColumnas + titulo )
-    print(columnas)
+def lj_reportes(x:Reportes):
+    x.id_reportante = str(x.id_reportante).ljust(10).lower() #Entero
+    x.id_reportado = str(x.id_reportado).ljust(10).lower() #Entero
+    x.razon_reporte = str(x.razon_reporte).ljust(255).lower() 
+    x.estado = str(x.id_reportado).ljust(10).lower() #Entero
 
-###FUNCIONES DE VALIDACION DE DATOS###
+#--------------------------------------------------------------#
+#                                                              #
+#                FUNCIONES DE VALIDACION DE DATOS              #
+#                                                              #
+#--------------------------------------------------------------#
 "var:respuesta=tipo string"
 def fn_validar_si_no():
     respuesta=input("Ingrese si o no: ") 
@@ -158,6 +198,83 @@ def fn_validar_rango_str(inicio: str, limite:str):
     
     return opc
 
+def fn_guardar_datos(registro:object,ARCHIVO_LOGICO:io.BufferedRandom,ARCHIVO_FISICO:str,formateador,posicion:int = -1):
+    """ Guarda el registro en su respectivo archivo """
+    t = os.path.getsize(ARCHIVO_FISICO)
+    try:        
+        if (posicion) == -1:
+            posicion = t
+
+        ARCHIVO_LOGICO.seek(posicion)
+        formateador(registro) 
+        pickle.dump(registro,ARCHIVO_LOGICO)
+        ARCHIVO_LOGICO.flush()
+    except:
+        print("Se genero un error")
+
+def fn_buscar_cantidad_de_registros(ARCHIVO_LOGICO:io.BufferedRandom,ARCHIVO_FISICO:str):
+    cantidad = 0   
+    if(os.path.getsize(ARCHIVO_FISICO) != 0):
+        ARCHIVO_LOGICO.seek(0)
+        pickle.load(ARCHIVO_LOGICO)
+        longitud_reg = ARCHIVO_LOGICO.tell()
+        t = os.path.getsize(ARCHIVO_FISICO) 
+        
+        cantidad = t//longitud_reg
+    ARCHIVO_LOGICO.seek(0)
+    return cantidad
+        
+def fn_busquedadico(data:str, ARCHIVO_LOGICO:io.BufferedRandom, ARCHIVO_FISICO:str,funcion):
+    ARCHIVO_LOGICO.seek(0, 0)
+    registro = pickle.load(ARCHIVO_LOGICO)
+    tamregi = ARCHIVO_LOGICO.tell()
+    cantreg = int(os.path.getsize(ARCHIVO_FISICO) / tamregi)
+    inicio = 0                 
+    fin = cantreg-1
+    medio = (inicio + fin) // 2
+    ARCHIVO_LOGICO.seek(medio * tamregi,0) 
+    registro = pickle.load(ARCHIVO_LOGICO)
+
+    while inicio <  fin and str(funcion(registro)).strip() != str(data).strip() :
+
+        if str((funcion(registro))).strip()  < str(data).strip():
+            fin = medio - 1
+        else:
+            inicio = medio + 1            
+        
+        medio = (inicio + fin) // 2
+        ARCHIVO_LOGICO.seek(medio * tamregi,0)  #tamregi   
+        registro = pickle.load(ARCHIVO_LOGICO)
+    if(int(funcion(registro) == data)):
+        return medio*tamregi
+    else:
+        return -1
+
+def fn_busquedasecuencial(
+    ARCHIVO_LOGICO: io.BufferedRandom, ARCHIVO_FISICO: str, callback
+) :
+    """ def busqueeda_especifica(regtemp,pos):
+        if str(regtemp.propiedad).strip() == 'valor':
+            localesActivos.append(regtemp)         
+            return False """
+
+    tamañoarchivo = os.path.getsize(ARCHIVO_FISICO)
+    ARCHIVO_LOGICO.seek(0)
+    encontrado = False
+
+    while ARCHIVO_LOGICO.tell() < tamañoarchivo and encontrado == False:
+        posicion = ARCHIVO_LOGICO.tell()
+        regtemporal = pickle.load(ARCHIVO_LOGICO)
+        encontrado = callback(regtemporal, posicion)
+
+    return encontrado
+
+   
+#--------------------------------------------------------------#
+#                                                              #
+#                PROCEDURES AUXILIARES                         #
+#                                                              #
+#--------------------------------------------------------------#
 def fn_text_center(data,space):
     mid = (space- len(data)) / 2
     parte_decimal = mid - int(mid)
@@ -179,8 +296,6 @@ def fn_text_format(data:str,length:int):
     else:
         aux=data
     return aux
-
-
 
 "var:numerColsDate,columnas,filas,space=tipo interger"
 "var:tamano_termina=tipo float"
@@ -224,130 +339,39 @@ def pr_tabla(colsDate:list[str],data:list[str]):
         
     print(pared)
 
-def lj_estudiantes(x:Estudiantes):
-    x.id_estudiantes=str(x.id_estudiantes).ljust(10) # Entero
-    x.email=str(x.email).ljust(32).lower()
-    x.nombre=str(x.nombre).ljust(32)
-    x.sexo=str(x.sexo).ljust(1).lower()
-    x.contrasena=str(x.contrasena).ljust(32)
-    x.estado=str(x.estado).ljust(10) #Booleano
-    x.hobbies=str(x.hobbies).ljust(255)
-    x.materia_favorita=str(x.materia_favorita).ljust(16)
-    x.deporte_favorito=str(x.deporte_favorito).ljust(16)
-    x.materia_fuerte=str(x.materia_fuerte).ljust(16)
-    x.materia_debil=str(x.materia_debil).ljust(16)
-    x.biografia=str(x.biografia).ljust(255)
-    x.pais=str(x.pais).ljust(32)
-    x.ciudad=str(x.ciudad).ljust(32)
-    x.fecha_nacimiento=str(x.fecha_nacimiento).ljust(10)
-
-def lj_moderadores(x:Moderadores):
-    x.id_moderador = str(x.id_moderador).ljust(10).lower() #Entero
-    x.email = str(x.email).ljust(32).lower()
-    x.contrasena = str(x.contrasena).ljust(32).lower()
-    x.estado = str(x.estado).ljust(10).lower() #Booleano
-
-def lj_administradores(x:Administradores):
-    x.id_admin = str(x.id_admin).ljust(10).lower() #Entero
-    x.email = str(x.email).ljust(32).lower() 
-    x.contrasena = str(x.contrasena).ljust(32).lower()
-
-def lj_likes(x:Likes):
-    x.destinatario=str(x.destinatario).ljust(10).lower() #Entero
-    x.remitente=str(x.remitente).ljust(10).lower() #Entero
-
-def lj_reportes(x:Reportes):
-    x.id_reportante = str(x.id_reportante).ljust(10).lower() #Entero
-    x.id_reportado = str(x.id_reportado).ljust(10).lower() #Entero
-    x.razon_reporte = str(x.razon_reporte).ljust(255).lower() 
-    x.estado = str(x.id_reportado).ljust(10).lower() #Entero
 
 def pr_cartel_construccion():
     print("\nOpcion en construccion...\n")
 
-def fn_guardar_datos(registro:object,ARCHIVO_LOGICO:io.BufferedRandom,ARCHIVO_FISICO:str,formateador,posicion:int = -1):
-    """ Guarda el registro en su respectivo archivo """
-    t = os.path.getsize(ARCHIVO_FISICO)
-    try:        
-        if (posicion) == -1:
-            posicion = t
-
-        ARCHIVO_LOGICO.seek(posicion)
-        formateador(registro) 
-        pickle.dump(registro,ARCHIVO_LOGICO)
-        ARCHIVO_LOGICO.flush()
-    except:
-        print("Se genero un error")
 
 
-def fn_buscar_cantidad_de_registros(ARCHIVO_LOGICO:io.BufferedRandom,ARCHIVO_FISICO:str):
-    cantidad = 0   
-    if(os.path.getsize(ARCHIVO_FISICO) != 0):
-        ARCHIVO_LOGICO.seek(0)
-        pickle.load(ARCHIVO_LOGICO)
-        longitud_reg = ARCHIVO_LOGICO.tell()
-        t = os.path.getsize(ARCHIVO_FISICO) 
-        
-        cantidad = t//longitud_reg
-    ARCHIVO_LOGICO.seek(0)
-    return cantidad
-        
+def pr_limpiar_consola():
+    os.system("cls")
+
+def pr_pausar_consola():
+    os.system("pause")
+
+def pr_crear_titulo(titulo:str):
+    columnas="" 
+    
+    cantidadLetra:int = len(titulo) # ES LA CANTIDAD DE LETRAS QUE TIENE EL TITULO
+    columnaTamano:int = os.get_terminal_size().columns
+
+    for i in range(0,columnaTamano):
+        columnas= columnas + "_"
+    
+    copiarColumnas = (columnaTamano - cantidadLetra )//2
+
+    print(columnas)
+    print("\n" + " " * copiarColumnas + titulo )
+    print(columnas)
 
 
-def busquedadico(data:str, ARCHIVO_LOGICO:io.BufferedRandom, ARCHIVO_FISICO:str,funcion:function):
-    ARCHIVO_LOGICO.seek(0, 0)
-    registro = pickle.load(ARCHIVO_LOGICO)
-    tamregi = ARCHIVO_LOGICO.tell()
-    cantreg = int(os.path.getsize(ARCHIVO_FISICO) / tamregi)
-    inicio = 0                 
-    fin = cantreg-1
-    medio = (inicio + fin) // 2
-    ARCHIVO_LOGICO.seek(medio * tamregi,0) 
-    registro = pickle.load(ARCHIVO_LOGICO)
-
-    while inicio <  fin and str(funcion(registro)).strip() != str(data).strip() :
-
-        if str((funcion(registro))).strip()  < str(data).strip():
-            fin = medio - 1
-        else:
-            inicio = medio + 1            
-        
-        medio = (inicio + fin) // 2
-        ARCHIVO_LOGICO.seek(medio * tamregi,0)  #tamregi   
-        registro = pickle.load(ARCHIVO_LOGICO)
-    if(int(funcion(registro) == data)):
-        return medio*tamregi
-    else:
-        return -1
-
-
-
-
-
-
-
-
-
-def busquedasecuencial(
-    ARCHIVO_LOGICO: io.BufferedRandom, ARCHIVO_FISICO: str, callback
-) :
-    """ def busqueeda_especifica(regtemp,pos):
-        if str(regtemp.propiedad).strip() == 'valor':
-            localesActivos.append(regtemp)         
-            return False """
-
-    tamañoarchivo = os.path.getsize(ARCHIVO_FISICO)
-    ARCHIVO_LOGICO.seek(0)
-    encontrado = False
-
-    while ARCHIVO_LOGICO.tell() < tamañoarchivo and encontrado == False:
-        posicion = ARCHIVO_LOGICO.tell()
-        regtemporal = pickle.load(ARCHIVO_LOGICO)
-        encontrado = callback(regtemporal, posicion)
-
-    return encontrado
-
-
+#--------------------------------------------------------------#
+#                                                              #
+#                PROGRAMA PRINCIPAL                            #
+#                                                              #
+#--------------------------------------------------------------#
 
 def pr_inicializar_programa():
     administradores = [["pepe@gmail.com","pepe"],["pedro@gmail.com","pepe"],["lorenzo@gmail.com","pepe"]]
@@ -358,44 +382,57 @@ def pr_inicializar_programa():
         admin.contrasena= administradores[i][1]
         admin.id_admin = fn_buscar_cantidad_de_registros(LOGICO_ARCHIVO_ADMINISTRADORES,FISICO_ARCHIVO_ADMINISTRADORES)
         fn_guardar_datos(admin,LOGICO_ARCHIVO_ADMINISTRADORES,FISICO_ARCHIVO_ADMINISTRADORES,lj_administradores)
-    
-
-def ver():
-        reg:Administradores
-        t = os.path.getsize(FISICO_ARCHIVO_ADMINISTRADORES)
-        pos = 0
-        LOGICO_ARCHIVO_ADMINISTRADORES.seek(0,0)
-        reg = pickle.load(LOGICO_ARCHIVO_ADMINISTRADORES)
-        while LOGICO_ARCHIVO_ADMINISTRADORES.tell() < t:
-            reg = pickle.load(LOGICO_ARCHIVO_ADMINISTRADORES)
-            print(reg.id_admin)
-            print(reg.id_admin)
-            print(reg.id_admin)
+ 
 
 
-def fn_busqueda_secuencial():
-    print("2")
+def pr_menu_estudiantes():
+    opc = -1
+    while opc != 0:  
+        print("\n1. Gestionar mi perfil \n2. Gestionar candidatos \n3. Matcheos \n4. Reportes estadísticos \n0. Salir")
+        opc = fn_validar_rango(0,4)
+        match opc:
+            case 1:
+                pr_gestionar_perfil()
+            case 2:
+                pr_gestionar_candidatos()
+            case 3:
+                pr_matcheos()
+            case 4:
+                pr_reporte_estadisticos()
+            case _:
+                ""
+            
+        
+def pr_menu_moderador():
+    opc = -1
+    while opc != 0:
+        print("\n1. Gestionar usuarios \n2. Gestionar Reportes \n3. Reportes Estadísticos \n0. Salir")
+        opc = fn_validar_rango(0,3)
+        match opc:
+            case 1 :
+                pr_gestionar_usuarios()
+            case 2:
+                pr_gestionar_repotes()
+            case 3:
+                pr_reportes_estadisticos()
+            case _:
+                ""
 
-    return False # Elemento no encontrado
 
-def fn_falso_burbuja():
-    ""
+def pr_menu_administrador():
+    opc = -1
+    while opc != 0:
+        print("\n1. Gestionar usuarios \n2. Gestionar Reportes \n3. Reportes Estadísticos \n0. Salir")
+        opc = fn_validar_rango(0,3)
+        match opc:
+            case 1 :
+                pr_gestionar_usuarios_admin()
+            case 2:
+                pr_gestionar_reportes_admin()
+            case 3:
+                pr_reporte_estadisticos_admin()
+            case _:
+                ""
 
-""" def pr_editar_datos_personales():
-    pr_crear_titulo("Gestionar perfil")
-    print("Ingrese que desea modificar")
-    print("Nombre")
-    print("Sexo")
-    print("Estado")
-    print("Hobbies")
-    print("Materia Favorita")
-    print("Deporte Favorito")
-    print("Materia Fuerte")
-    print("Materia Debil")
-    print("Biografia")
-    print("Pais")
-    print("Ciudad")
-    print("Fecha de nacimiento")
- """
 
 fn_cerrar_logico()
