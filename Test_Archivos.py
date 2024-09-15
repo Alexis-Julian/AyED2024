@@ -57,7 +57,7 @@ def fn_guardar_datos(registro:object, ARCHIVO_LOGICO:io.BufferedRandom, ARCHIVO_
     except (ValueError, TypeError):
         print("Se genero un error")
 
-def fn_busquedadico(ARCHIVO_LOGICO:io.BufferedRandom, ARCHIVO_FISICO:str,campo:str, data:int):
+def fn_busquedadico(ARCHIVO_LOGICO:io.BufferedRandom, ARCHIVO_FISICO:str, campo:str, data:int):
     dato = int(str(data).strip())
     ARCHIVO_LOGICO.seek(0, 0)
     registro = pickle.load(ARCHIVO_LOGICO)
