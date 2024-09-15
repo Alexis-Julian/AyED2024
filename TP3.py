@@ -6,15 +6,21 @@ import random
 import locale 
 import time 
 import getpass
-from typing import Callable
+#from typing import Callable
 
+#--------------------------------------------------------------#
+#                                                              #
+#              CONSTANTES Y VARIABLES GLOBALES                 #
+#                                                              #
+#--------------------------------------------------------------#
+
+CARPETA = "pruebas"
 
 #--------------------------------------------------------------#
 #                                                              #
 #                CLASES                                        #
 #                                                              #
 #--------------------------------------------------------------#
-
 
 class Estudiantes:
     def __init__(self):
@@ -76,7 +82,6 @@ class Reportes:
         self.estado= 0
 
 
-
 #--------------------------------------------------------------#
 #                                                              #
 #                ARCHIVOS                                      #
@@ -84,7 +89,7 @@ class Reportes:
 #--------------------------------------------------------------#
 
 def fn_crear_logico(ruta: str):
-    archivo_logico:io.BufferedRandom  # Inicialización explícita
+    archivo_logico: io.BufferedRandom  # Inicialización explícita
     
     if os.path.exists(ruta):
         archivo_logico = open(ruta, "r+b")  # Abre para lectura y escritura binaria
@@ -92,24 +97,6 @@ def fn_crear_logico(ruta: str):
         archivo_logico = open(ruta, "w+b")  # Crea un archivo nuevo y lo abre en modo binario
     
     return archivo_logico
-
-
-if(not(os.path.exists("archivos"))):
-    os.mkdir(os.getcwd() + "/archivos")
-    
-if(os.path.exists("archivos")):
-    #Archivo fiscos
-    FISICO_ARCHIVO_ESTUDIANTES= os.getcwd() + "/archivos/estudiantes.dat" 
-    FISICO_ARCHIVO_MODERADORES= os.getcwd() + "/archivos/moderadores.dat" 
-    FISICO_ARCHIVO_REPORTES= os.getcwd() + "/archivos/reportes.dat"
-    FISICO_ARCHIVO_LIKES= os.getcwd() + "/archivos/likes.dat"
-    FISICO_ARCHIVO_ADMINISTRADORES= os.getcwd() + "/archivos/administradores.dat"
-
-    LOGICO_ARCHIVO_ESTUDIANTES= fn_crear_logico(FISICO_ARCHIVO_ESTUDIANTES) 
-    LOGICO_ARCHIVO_MODERADORES= fn_crear_logico(FISICO_ARCHIVO_MODERADORES) 
-    LOGICO_ARCHIVO_REPORTES= fn_crear_logico(FISICO_ARCHIVO_REPORTES)
-    LOGICO_ARCHIVO_LIKES= fn_crear_logico(FISICO_ARCHIVO_LIKES)
-    LOGICO_ARCHIVO_ADMINISTRADORES= fn_crear_logico(FISICO_ARCHIVO_ADMINISTRADORES)
 
 
 def fn_cerrar_logico():
@@ -125,7 +112,8 @@ def fn_cerrar_logico():
 #                FORMATEADORES                                 #
 #                                                              #
 #--------------------------------------------------------------#
-def lj_estudiantes(x:Estudiantes):
+
+def formatear_estudiantes(x: Estudiantes):
     x.id_estudiantes=str(x.id_estudiantes).ljust(10) # Entero
     x.email=str(x.email).ljust(32).lower()
     x.nombre=str(x.nombre).ljust(32)
@@ -142,22 +130,22 @@ def lj_estudiantes(x:Estudiantes):
     x.ciudad=str(x.ciudad).ljust(32)
     x.fecha_nacimiento=str(x.fecha_nacimiento).ljust(10)
 
-def lj_moderadores(x:Moderadores):
+def formatear_moderadores(x: Moderadores):
     x.id_moderador = str(x.id_moderador).ljust(10).lower() #Entero
     x.email = str(x.email).ljust(32).lower()
     x.contrasena = str(x.contrasena).ljust(32).lower()
     x.estado = str(x.estado).ljust(10).lower() #Booleano
 
-def lj_administradores(x:Administradores):
+def formatear_administradores(x: Administradores):
     x.id_admin = str(x.id_admin).ljust(10).lower() #Entero
     x.email = str(x.email).ljust(32).lower() 
     x.contrasena = str(x.contrasena).ljust(32).lower()
 
-def lj_likes(x:Likes):
+def formatear_likes(x: Likes):
     x.destinatario=str(x.destinatario).ljust(10).lower() #Entero
     x.remitente=str(x.remitente).ljust(10).lower() #Entero
 
-def lj_reportes(x:Reportes):
+def formatear_reportes(x: Reportes):
     x.id_reportante = str(x.id_reportante).ljust(10).lower() #Entero
     x.id_reportado = str(x.id_reportado).ljust(10).lower() #Entero
     x.razon_reporte = str(x.razon_reporte).ljust(255).lower() 
@@ -168,16 +156,17 @@ def lj_reportes(x:Reportes):
 #                FUNCIONES DE VALIDACION DE DATOS              #
 #                                                              #
 #--------------------------------------------------------------#
-"var:respuesta=tipo string"
+
+"var: respuesta = tipo string"
 def fn_validar_si_no():
     respuesta=input("Ingrese si o no: ") 
-    while (respuesta !="si") and  (respuesta !="no"):
+    while (respuesta != "si") and  (respuesta != "no"):
         print("No es un opción valida, ingrese si o no")
         respuesta=input("Ingrese si o no: ")
     return respuesta
 
-"var:numero,inicio,limite=tipo interger"
-def fn_validar_rango(inicio:int,limite:int):
+"var: numero, inicio, limite = tipo interger"
+def fn_validar_rango(inicio: int, limite: int):
     try:
         numero =int(input("Ingrese una opción: "))
         while (numero < inicio) or (numero > limite):
@@ -186,164 +175,160 @@ def fn_validar_rango(inicio:int,limite:int):
         return numero
     except ValueError:
         print("\nError: Solamente se permiten numeros\n")
-        return fn_validar_rango(inicio,limite)
+        return fn_validar_rango(inicio, limite)
 
-"var:inicio,limite,opc=tipo string"
-def fn_validar_rango_str(inicio: str, limite:str):
+"var: inicio, limite, opc = tipo string"
+def fn_validar_rango_str(inicio: str, limite: str):
     opc = input("Ingrese una opcion:").lower()
     
-    while not (inicio <= opc <= limite):
+    while not inicio <= opc <= limite:
         print("\nError, ingrese una opcion valida.\n")
-        opc = input("Ingrese una opcion:")
+        opc = input("Ingrese una opcion: ")
     
     return opc
 
-def fn_guardar_datos(registro:object,ARCHIVO_LOGICO:io.BufferedRandom,ARCHIVO_FISICO:str,formateador,posicion:int = -1):
+def fn_guardar_datos(registro: object, archivo_logico: io.BufferedRandom, archivo_fisico: str, formateador, posicion: int = -1):
     """ Guarda el registro en su respectivo archivo """
-    t = os.path.getsize(ARCHIVO_FISICO)
+    t = os.path.getsize(archivo_fisico)
     try:        
-        if (posicion) == -1:
+        if posicion == -1:
             posicion = t
-
-        ARCHIVO_LOGICO.seek(posicion)
+        archivo_logico.seek(posicion)
         formateador(registro) 
-        pickle.dump(registro,ARCHIVO_LOGICO)
-        ARCHIVO_LOGICO.flush()
-    except:
+        pickle.dump(registro, archivo_logico)
+        archivo_logico.flush()
+    except (ValueError, TypeError):
         print("Se genero un error")
 
-def fn_buscar_cantidad_de_registros(ARCHIVO_LOGICO:io.BufferedRandom,ARCHIVO_FISICO:str):
+def fn_buscar_cantidad_de_registros(archivo_logico: io.BufferedRandom, archivo_fisico: str):
     cantidad = 0   
-    if(os.path.getsize(ARCHIVO_FISICO) != 0):
-        ARCHIVO_LOGICO.seek(0)
-        pickle.load(ARCHIVO_LOGICO)
-        longitud_reg = ARCHIVO_LOGICO.tell()
-        t = os.path.getsize(ARCHIVO_FISICO) 
-        
-        cantidad = t//longitud_reg
-    ARCHIVO_LOGICO.seek(0)
+    if os.path.getsize(archivo_fisico) != 0:
+        archivo_logico.seek(0)
+        pickle.load(archivo_logico)
+        longitud_reg = archivo_logico.tell()
+        tam_arch = os.path.getsize(archivo_fisico) 
+        cantidad = tam_arch // longitud_reg
+        archivo_logico.seek(0)
     return cantidad
-        
-def fn_busquedadico(data:str, ARCHIVO_LOGICO:io.BufferedRandom, ARCHIVO_FISICO:str,funcion):
-    ARCHIVO_LOGICO.seek(0, 0)
-    registro = pickle.load(ARCHIVO_LOGICO)
-    tamregi = ARCHIVO_LOGICO.tell()
-    cantreg = int(os.path.getsize(ARCHIVO_FISICO) / tamregi)
-    inicio = 0                 
-    fin = cantreg-1
+
+def fn_busquedadico(archivo_logico: io.BufferedRandom, archivo_fisico: str, campo: str, data: int):
+    dato = int(str(data).strip())
+    archivo_logico.seek(0, 0)
+    registro = pickle.load(archivo_logico)
+    tamregi = archivo_logico.tell()
+    if tamregi == 0:
+        return -1
+    cantreg = int(os.path.getsize(archivo_fisico) / tamregi)
+    inicio = 0
+    fin = cantreg - 1
     medio = (inicio + fin) // 2
-    ARCHIVO_LOGICO.seek(medio * tamregi,0) 
-    registro = pickle.load(ARCHIVO_LOGICO)
+    archivo_logico.seek(medio * tamregi, 0) 
+    registro = pickle.load(archivo_logico)
 
-    while inicio <  fin and str(funcion(registro)).strip() != str(data).strip() :
-
-        if str((funcion(registro))).strip()  < str(data).strip():
+    while inicio <  fin and int(str(getattr(registro, campo)).strip()) != dato:
+        if int(str(getattr(registro, campo)).strip()) > dato:
             fin = medio - 1
         else:
             inicio = medio + 1            
         
         medio = (inicio + fin) // 2
-        ARCHIVO_LOGICO.seek(medio * tamregi,0)  #tamregi   
-        registro = pickle.load(ARCHIVO_LOGICO)
-    if(int(funcion(registro) == data)):
-        return medio*tamregi
-    else:
-        return -1
+        archivo_logico.seek(medio * tamregi, 0)
+        registro = pickle.load(archivo_logico)
+    if int(str(getattr(registro, campo)).strip()) == dato:
+        return medio * tamregi
 
-def fn_busquedasecuencial(
-    ARCHIVO_LOGICO: io.BufferedRandom, ARCHIVO_FISICO: str, callback
-) :
-    """ def busqueeda_especifica(regtemp,pos):
+    return -1
+
+def fn_busquedasecuencial(archivo_logico: io.BufferedRandom, archivo_fisico: str, callback):
+    """ def busqueeda_especifica(regtemp, pos):
         if str(regtemp.propiedad).strip() == 'valor':
             localesActivos.append(regtemp)         
             return False """
 
-    tamañoarchivo = os.path.getsize(ARCHIVO_FISICO)
-    ARCHIVO_LOGICO.seek(0)
+    tam_archivo = os.path.getsize(archivo_fisico)
+    archivo_logico.seek(0)
     encontrado = False
 
-    while ARCHIVO_LOGICO.tell() < tamañoarchivo and encontrado == False:
-        posicion = ARCHIVO_LOGICO.tell()
-        regtemporal = pickle.load(ARCHIVO_LOGICO)
+    while archivo_logico.tell() < tam_archivo and encontrado == False:
+        posicion = archivo_logico.tell()
+        regtemporal = pickle.load(archivo_logico)
         encontrado = callback(regtemporal, posicion)
 
     return encontrado
 
-   
+
 #--------------------------------------------------------------#
 #                                                              #
-#                PROCEDURES AUXILIARES                         #
+#                 FUNCIONES AUXILIARES                         #
 #                                                              #
 #--------------------------------------------------------------#
-def fn_text_center(data,space):
-    mid = (space- len(data)) / 2
+
+def fn_text_center(data, space):
+    mid = (space - len(data)) / 2
     parte_decimal = mid - int(mid)
-    if(str(parte_decimal) == "0.0"):
-        mid=int(mid)
-        return (" "*mid)+data+(" "*mid)
+    if str(parte_decimal) == "0.0":
+        mid = int(mid)
+        return (" " * mid) + data + (" " * mid)
     else:
         mid = int(mid)
-        return (" "*mid)+" "+data+(" "*mid)  
+        return (" " * mid)+" " + data+(" " * mid)  
 
-def fn_text_format(data:str,length:int):
+def fn_text_format(data: str, length: int):
     aux = ""
-    if(len(data) > length):
-        for i in range(0,length-3):
-            if(data[i]=="\n"):
-                aux+=""
+    if len(data) > length:
+        for i in range(0, length - 3):
+            if data[i] == "\n":
+                aux += ""
             else:  
-                aux+=data[i]
+                aux += data[i]
     else:
-        aux=data
+        aux = data
     return aux
 
-"var:numerColsDate,columnas,filas,space=tipo interger"
-"var:tamano_termina=tipo float"
-"var:techo,pared,header=tipo string"
-def pr_tabla(colsDate:list[str],data:list[str]):
-    #cols=["CodLocal","Nombre","Estado"]
+"var: numerColsDate, columnas, filas, space = tipo interger"
+"var: tamano_termina = tipo float"
+"var: techo, pared, header = tipo string"
+def pr_tabla(colsDate: list[str], data: list[str]):
+    #cols=["CodLocal", "Nombre", "Estado"]
     # Obtener el tamaño de la terminal
     os.system("cls")
     tamano_terminal = os.get_terminal_size()
     
     # Extraer el número de columnas y filas
     columnas, filas = tamano_terminal.columns, tamano_terminal.lines
-    #print(columnas,"Columnas")
+    #print(columnas, "Columnas")
 
     numberColsDate= len(colsDate)
 
     #Espacio para separar los datos
-    space = ((columnas-numberColsDate) // numberColsDate)
+    space = (columnas-numberColsDate) // numberColsDate
     
     #Agregar espacio
-    for i in range(0,numberColsDate):
-        colsDate[i]= fn_text_center(colsDate[i],space)
+    for i in range(0, numberColsDate):
+        colsDate[i]= fn_text_center(colsDate[i], space)
     
     techo  = "-"*columnas
     pared= ""
     header= "|"
 
-    for i in range(0,numberColsDate):
-        mid = (space-len(colsDate[i]))/2
+    for i in range(0, numberColsDate):
+        mid = (space - len(colsDate[i])) / 2
         header += colsDate[i] + "|"
         
     print(techo)
     print(header)
     print(techo)
-    for i in range(0,len(data)):
-        pared+="|"
-        for t  in range(0,numberColsDate ):
-            pared+=fn_text_center(fn_text_format(data[i][t],space),space) +"|"
-        pared+="\n"
-        pared+=techo
+    for i in range(0, len(data)):
+        pared += "|"
+        for t in range(0, numberColsDate ):
+            pared += fn_text_center(fn_text_format(data[i][t], space), space) + "|"
+        pared += "\n"
+        pared += techo
         
     print(pared)
 
-
 def pr_cartel_construccion():
-    print("\nOpcion en construccion...\n")
-
-
+    print("\nOpcion en construcción...\n")
 
 def pr_limpiar_consola():
     os.system("cls")
@@ -351,45 +336,27 @@ def pr_limpiar_consola():
 def pr_pausar_consola():
     os.system("pause")
 
-def pr_crear_titulo(titulo:str):
-    columnas="" 
+def pr_crear_titulo(titulo: str):
+    columnas = "" 
     
-    cantidadLetra:int = len(titulo) # ES LA CANTIDAD DE LETRAS QUE TIENE EL TITULO
-    columnaTamano:int = os.get_terminal_size().columns
+    cantidadLetra: int = len(titulo) # ES LA CANTIDAD DE LETRAS QUE TIENE EL TITULO
+    columnaTamano: int = os.get_terminal_size().columns
 
-    for i in range(0,columnaTamano):
-        columnas= columnas + "_"
+    #for i in range(0, columnaTamano):
+    #    columnas = columnas + "_"
+    columnas = "_" * columnaTamano
     
-    copiarColumnas = (columnaTamano - cantidadLetra )//2
+    copiarColumnas = (columnaTamano - cantidadLetra ) // 2
 
     print(columnas)
     print("\n" + " " * copiarColumnas + titulo )
     print(columnas)
 
-
-#--------------------------------------------------------------#
-#                                                              #
-#                PROGRAMA PRINCIPAL                            #
-#                                                              #
-#--------------------------------------------------------------#
-
-def pr_inicializar_programa():
-    administradores = [["pepe@gmail.com","pepe"],["pedro@gmail.com","pepe"],["lorenzo@gmail.com","pepe"]]
-
-    for i in range(0,len(administradores)):
-        admin = Administradores()
-        admin.email = administradores[i][0]
-        admin.contrasena= administradores[i][1]
-        admin.id_admin = fn_buscar_cantidad_de_registros(LOGICO_ARCHIVO_ADMINISTRADORES,FISICO_ARCHIVO_ADMINISTRADORES)
-        fn_guardar_datos(admin,LOGICO_ARCHIVO_ADMINISTRADORES,FISICO_ARCHIVO_ADMINISTRADORES,lj_administradores)
- 
-
-
 def pr_menu_estudiantes():
     opc = -1
     while opc != 0:  
         print("\n1. Gestionar mi perfil \n2. Gestionar candidatos \n3. Matcheos \n4. Reportes estadísticos \n0. Salir")
-        opc = fn_validar_rango(0,4)
+        opc = fn_validar_rango(0, 4)
         match opc:
             case 1:
                 pr_gestionar_perfil()
@@ -401,13 +368,12 @@ def pr_menu_estudiantes():
                 pr_reporte_estadisticos()
             case _:
                 ""
-            
-        
+
 def pr_menu_moderador():
     opc = -1
     while opc != 0:
         print("\n1. Gestionar usuarios \n2. Gestionar Reportes \n3. Reportes Estadísticos \n0. Salir")
-        opc = fn_validar_rango(0,3)
+        opc = fn_validar_rango(0, 3)
         match opc:
             case 1 :
                 pr_gestionar_usuarios()
@@ -418,12 +384,11 @@ def pr_menu_moderador():
             case _:
                 ""
 
-
 def pr_menu_administrador():
     opc = -1
     while opc != 0:
         print("\n1. Gestionar usuarios \n2. Gestionar Reportes \n3. Reportes Estadísticos \n0. Salir")
-        opc = fn_validar_rango(0,3)
+        opc = fn_validar_rango(0, 3)
         match opc:
             case 1 :
                 pr_gestionar_usuarios_admin()
@@ -434,5 +399,44 @@ def pr_menu_administrador():
             case _:
                 ""
 
+def pr_inicializar_programa():
+    administradores = [["pepe@gmail.com", "pepe"], ["pedro@gmail.com", "pepe"], ["lorenzo@gmail.com", "pepe"]]
 
+    for i in range(0, len(administradores)):
+        admin = Administradores()
+        admin.email = administradores[i][0]
+        admin.contrasena= administradores[i][1]
+        admin.id_admin = fn_buscar_cantidad_de_registros(LOGICO_ARCHIVO_ADMINISTRADORES, FISICO_ARCHIVO_ADMINISTRADORES)
+        fn_guardar_datos(admin, LOGICO_ARCHIVO_ADMINISTRADORES, FISICO_ARCHIVO_ADMINISTRADORES, formatear_administradores)
+
+
+#--------------------------------------------------------------#
+#                                                              #
+#                PROGRAMA PRINCIPAL                            #
+#                                                              #
+#--------------------------------------------------------------#
+
+if not os.path.exists(CARPETA):
+    os.mkdir(os.getcwd() + "/" + CARPETA)
+    
+if os.path.exists(CARPETA):
+    # Archivo fiscos
+    FISICO_ARCHIVO_ADMINISTRADORES = os.getcwd() + "/" + CARPETA + "/administradores.dat"
+    FISICO_ARCHIVO_MODERADORES = os.getcwd() + "/" + CARPETA + "/moderadores.dat" 
+    FISICO_ARCHIVO_ESTUDIANTES = os.getcwd() + "/" + CARPETA + "/estudiantes.dat" 
+    FISICO_ARCHIVO_REPORTES = os.getcwd() + "/" + CARPETA + "/reportes.dat"
+    FISICO_ARCHIVO_LIKES = os.getcwd() + "/" + CARPETA + "/likes.dat"
+
+    LOGICO_ARCHIVO_ADMINISTRADORES = fn_crear_logico(FISICO_ARCHIVO_ADMINISTRADORES)
+    LOGICO_ARCHIVO_MODERADORES = fn_crear_logico(FISICO_ARCHIVO_MODERADORES) 
+    LOGICO_ARCHIVO_ESTUDIANTES = fn_crear_logico(FISICO_ARCHIVO_ESTUDIANTES) 
+    LOGICO_ARCHIVO_REPORTES = fn_crear_logico(FISICO_ARCHIVO_REPORTES)
+    LOGICO_ARCHIVO_LIKES = fn_crear_logico(FISICO_ARCHIVO_LIKES)
+
+# La lógica inicia acá
+
+
+
+
+# Última línea
 fn_cerrar_logico()
