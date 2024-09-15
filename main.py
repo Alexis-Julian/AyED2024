@@ -465,6 +465,7 @@ def pr_pausar_consola():
     os.system("pause")
 
 def pr_crear_titulo(titulo: str):
+    pr_limpiar_consola()
     columnas = "" 
     
     cantidadLetra: int = len(titulo) # ES LA CANTIDAD DE LETRAS QUE TIENE EL TITULO
@@ -561,11 +562,25 @@ def pr_crear_estudiantes():
 
 def pr_eliminar_perfil():
     #VAMOOS A MOSTRAR UNA CUADRILLA CON EL PERFIL
-    opc = -1
-    #while opc
-    #letras = animate_banner()
-    #print(letras)
+    pr_crear_titulo("Eliminar perfil")
+    print("\nDesea eliminar su perfil?\n ")
+    si_no = fn_validar_si_no()
+    if(si_no =="si"):
+        print("\nSe le presentara un captcha en la pantalla porfavor ingrese las letras que corresponden\n")
+        pr_pausar_consola()
+        letras = animate_banner()
+        letras_str = letras[0]+letras[1]+letras[2]
+        intento = input("Ingrese las letras mostradas en patanlla (Las mayusculas con las minusuculas son indistinguibles): ").upper()
+        if(letras_str == intento):
+            print("\nSu perfil se eliminara muchas gracias por estar con nosotros vuelva pronto.\n")
+            pr_pausar_consola()
+        else:
+            print("\nUsted ingreso mal sus letras mostradas en pantalla, para volver a intentar eliminar su perfil ingrese nuevamente a este menu.\n")
+            pr_pausar_consola()
 
+    else:
+        print("\nSera devuelto al menu principal, le agradecemos por quedarse con nosotros.\n")
+        pr_pausar_consola()
 pr_eliminar_perfil()
 
 def pr_menu_estudiantes():
