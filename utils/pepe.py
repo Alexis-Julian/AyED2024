@@ -1,116 +1,119 @@
-import pickle 
-import io 
-import os 
+import math
+import os
+import time
+
+A = B = C = 0
+
+cubeWidth = 20
+width, height = 160, 44
+zBuffer = [0] * (width * height)
+buffer = [' '] * (width * height)
+backgroundASCIICode = ' '
+distanceFromCam = 100
+horizontalOffset = 0
+K1 = 40
+
+incrementSpeed = 0.6
 
 
-def lj_moderadores(x):
-    x.id_moderador = str(x.id_moderador).ljust(10).lower() #Entero
-    x.email = str(x.email).ljust(32).lower()
-    x.contrasena = str(x.contrasena).ljust(32).lower()
-    x.estado = str(x.estado).ljust(10).lower() #Booleano
+def calculateX(i, j, k):
+    return j * math.sin(A) * math.sin(B) * math.cos(C) - k * math.cos(A) * math.sin(B) * math.cos(C) + \
+           j * math.cos(A) * math.sin(C) + k * math.sin(A) * math.sin(C) + i * math.cos(B) * math.cos(C)
 
 
-def fn_crear_logico(ruta: str):
-    archivo_logico = None  # Inicialización explícita
-    
-    if os.path.exists(ruta):
-        archivo_logico = open(ruta, "r+b")  # Abre para lectura y escritura binaria
-    else:
-        archivo_logico = open(ruta, "w+b")  # Crea un archivo nuevo y lo abre en modo binario
-    
-    return archivo_logico
-
-if(not(os.path.exists("archivos"))):
-    os.mkdir(os.getcwd() + "/archivos")
-    
-if(os.path.exists("archivos")):
-    #Archivo fiscos
-    FISICO_ARCHIVO_ESTUDIANTES= os.getcwd() + "/archivos/estudiantes.dat" 
-    FISICO_ARCHIVO_MODERADORES= os.getcwd() + "/archivos/moderadores.dat" 
-    FISICO_ARCHIVO_REPORTES= os.getcwd() + "/archivos/reportes.dat"
-    FISICO_ARCHIVO_LIKES= os.getcwd() + "/archivos/likes.dat"
-    FISICO_ARCHIVO_ADMINISTRADORES= os.getcwd() + "/archivos/administradores.dat"
-
-    LOGICO_ARCHIVO_ESTUDIANTES= fn_crear_logico(FISICO_ARCHIVO_ESTUDIANTES) 
-    LOGICO_ARCHIVO_MODERADORES= fn_crear_logico(FISICO_ARCHIVO_MODERADORES) 
-    LOGICO_ARCHIVO_REPORTES= fn_crear_logico(FISICO_ARCHIVO_REPORTES)
-    LOGICO_ARCHIVO_LIKES= fn_crear_logico(FISICO_ARCHIVO_LIKES)
-    LOGICO_ARCHIVO_ADMINISTRADORES= fn_crear_logico(FISICO_ARCHIVO_ADMINISTRADORES)
+def calculateY(i, j, k):
+    return j * math.cos(A) * math.cos(C) + k * math.sin(A) * math.cos(C) - \
+           j * math.sin(A) * math.sin(B) * math.sin(C) + k * math.cos(A) * math.sin(B) * math.sin(C) - \
+           i * math.cos(B) * math.sin(C)
 
 
-def fn_guardar_datos(registro:object,ARCHIVO_LOGICO:io.BufferedRandom,ARCHIVO_FISICO:str,formateador,posicion:int = -1):
-    """ Guarda el registro en su respectivo archivo """
-    t = os.path.getsize(ARCHIVO_FISICO)
-    try:        
-        if (posicion) == -1:
-            posicion = t
-
-        ARCHIVO_LOGICO.seek(posicion)
-        formateador(registro) 
-        pickle.dump(registro,ARCHIVO_LOGICO)
-        ARCHIVO_LOGICO.flush()
-    except:
-        print("Se genero un error")
- 
-class Moderadores:
-    def __init__(self):
-        self.id_moderador=0
-        self.email=""
-        self.contrasena=""
-        self.estado=bool
-
-for i in range(0,20):
-    moderador = Moderadores()
-    moderador.id_moderador = i
-    """ fn_guardar_datos(moderador,LOGICO_ARCHIVO_MODERADORES,FISICO_ARCHIVO_MODERADORES,lj_moderadores) """
-    
+def calculateZ(i, j, k):
+    return k * math.cos(A) * math.cos(B) - j * math.sin(A) * math.cos(B) + i * math.sin(B)
 
 
+def calculateForSurface(cubeX, cubeY, cubeZ, ch):
+    global x, y, z, ooz, xp, yp, idx
+    x = calculateX(cubeX, cubeY, cubeZ)
+    y = calculateY(cubeX, cubeY, cubeZ)
+    z = calculateZ(cubeX, cubeY, cubeZ) + distanceFromCam
+
+    ooz = 1 / z
+
+    xp = int(width / 2 + horizontalOffset + K1 * ooz * x * 2)
+    yp = int(height / 2 + K1 * ooz * y)
+
+    idx = xp + yp * width
+    if 0 <= idx < width * height:
+        if ooz > zBuffer[idx]:
+            zBuffer[idx] = ooz
+            buffer[idx] = ch
 
 
-def ver_moderadores():
-    t = os.path.getsize(FISICO_ARCHIVO_MODERADORES)
-    while LOGICO_ARCHIVO_MODERADORES.tell() < t:
-        moderador:Moderadores = pickle.load(LOGICO_ARCHIVO_MODERADORES)
-        print(moderador.id_moderador)
-    
+def clear_console():
+    os.system('cls' if os.name == 'nt' else 'clear')
 
-    
 
-#Funciones de utilidad 
-def busquedadico(data:str, ARCHIVO_LOGICO:io.BufferedRandom, ARCHIVO_FISICO:str,funcion:function):
-    ARCHIVO_LOGICO.seek(0, 0)
-    registro = pickle.load(ARCHIVO_LOGICO)
-    tamregi = ARCHIVO_LOGICO.tell()
-    cantreg = int(os.path.getsize(ARCHIVO_FISICO) / tamregi)
-    inicio = 0                 
-    fin = cantreg-1
-    medio = (inicio + fin) // 2
-    ARCHIVO_LOGICO.seek(medio * tamregi,0) 
-    registro = pickle.load(ARCHIVO_LOGICO)
+def draw_cube():
+    global A, B, C
+    while True:
+        buffer[:] = [backgroundASCIICode] * (width * height)
+        zBuffer[:] = [0] * (width * height)
 
-    while inicio <  fin and str(funcion(registro)).strip() != str(data).strip() :
+        # first cube
+        cubeWidth = 20
+        horizontalOffset = -2 * cubeWidth
+        for cubeX in frange(-cubeWidth, cubeWidth, incrementSpeed):
+            for cubeY in frange(-cubeWidth, cubeWidth, incrementSpeed):
+                calculateForSurface(cubeX, cubeY, -cubeWidth, '@')
+                calculateForSurface(cubeWidth, cubeY, cubeX, '$')
+                calculateForSurface(-cubeWidth, cubeY, -cubeX, '~')
+                calculateForSurface(-cubeX, cubeY, cubeWidth, '#')
+                calculateForSurface(cubeX, -cubeWidth, -cubeY, ';')
+                calculateForSurface(cubeX, cubeWidth, cubeY, '+')
 
-        if str((funcion(registro))).strip()  < str(data).strip():
-            fin = medio - 1
-        else:
-            inicio = medio + 1            
-        
-        medio = (inicio + fin) // 2
-        ARCHIVO_LOGICO.seek(medio * tamregi,0)  #tamregi   
-        registro = pickle.load(ARCHIVO_LOGICO)
-    if(int(funcion(registro) == data)):
-        return medio*tamregi
-    else:
-        return -1
+        # second cube
+        cubeWidth = 10
+        horizontalOffset = 1 * cubeWidth
+        for cubeX in frange(-cubeWidth, cubeWidth, incrementSpeed):
+            for cubeY in frange(-cubeWidth, cubeWidth, incrementSpeed):
+                calculateForSurface(cubeX, cubeY, -cubeWidth, '@')
+                calculateForSurface(cubeWidth, cubeY, cubeX, '$')
+                calculateForSurface(-cubeWidth, cubeY, -cubeX, '~')
+                calculateForSurface(-cubeX, cubeY, cubeWidth, '#')
+                calculateForSurface(cubeX, -cubeWidth, -cubeY, ';')
+                calculateForSurface(cubeX, cubeWidth, cubeY, '+')
+
+        # third cube
+        cubeWidth = 5
+        horizontalOffset = 8 * cubeWidth
+        for cubeX in frange(-cubeWidth, cubeWidth, incrementSpeed):
+            for cubeY in frange(-cubeWidth, cubeWidth, incrementSpeed):
+                calculateForSurface(cubeX, cubeY, -cubeWidth, '@')
+                calculateForSurface(cubeWidth, cubeY, cubeX, '$')
+                calculateForSurface(-cubeWidth, cubeY, -cubeX, '~')
+                calculateForSurface(-cubeX, cubeY, cubeWidth, '#')
+                calculateForSurface(cubeX, -cubeWidth, -cubeY, ';')
+                calculateForSurface(cubeX, cubeWidth, cubeY, '+')
+
+        # Print buffer
+        clear_console()
+        for k in range(width * height):
+            if k % width == 0:
+                print()
+            print(buffer[k], end="")
+
+        A += 0.05
+        B += 0.05
+        C += 0.01
+        time.sleep(0.01667)
 
 
 
+def frange(start, stop, step):
+    while start < stop:
+        yield start
+        start += step
 
 
-
-
-def probando(registro:Moderadores):
-    return registro.id_moderador
-
-busquedadico(4,LOGICO_ARCHIVO_MODERADORES,FISICO_ARCHIVO_MODERADORES,probando) 
+if __name__ == "__main__":
+    draw_cube()
