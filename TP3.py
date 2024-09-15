@@ -112,6 +112,7 @@ def fn_cerrar_logico():
 #                FORMATEADORES                                 #
 #                                                              #
 #--------------------------------------------------------------#
+
 def formatear_estudiantes(x: Estudiantes):
     x.id_estudiantes=str(x.id_estudiantes).ljust(10) # Entero
     x.email=str(x.email).ljust(32).lower()
@@ -155,10 +156,11 @@ def formatear_reportes(x: Reportes):
 #                FUNCIONES DE VALIDACION DE DATOS              #
 #                                                              #
 #--------------------------------------------------------------#
+
 "var: respuesta = tipo string"
 def fn_validar_si_no():
     respuesta=input("Ingrese si o no: ") 
-    while (respuesta !="si") and  (respuesta !="no"):
+    while (respuesta != "si") and  (respuesta != "no"):
         print("No es un opción valida, ingrese si o no")
         respuesta=input("Ingrese si o no: ")
     return respuesta
@@ -185,43 +187,43 @@ def fn_validar_rango_str(inicio: str, limite: str):
     
     return opc
 
-def fn_guardar_datos(registro: object, ARCHIVO_LOGICO: io.BufferedRandom, ARCHIVO_FISICO: str, formateador, posicion: int = -1):
+def fn_guardar_datos(registro: object, archivo_logico: io.BufferedRandom, archivo_fisico: str, formateador, posicion: int = -1):
     """ Guarda el registro en su respectivo archivo """
-    t = os.path.getsize(ARCHIVO_FISICO)
+    t = os.path.getsize(archivo_fisico)
     try:        
         if posicion == -1:
             posicion = t
-
-        ARCHIVO_LOGICO.seek(posicion)
+        archivo_logico.seek(posicion)
         formateador(registro) 
-        pickle.dump(registro, ARCHIVO_LOGICO)
-        ARCHIVO_LOGICO.flush()
+        pickle.dump(registro, archivo_logico)
+        archivo_logico.flush()
     except (ValueError, TypeError):
         print("Se genero un error")
 
-def fn_buscar_cantidad_de_registros(ARCHIVO_LOGICO: io.BufferedRandom, ARCHIVO_FISICO: str):
+def fn_buscar_cantidad_de_registros(archivo_logico: io.BufferedRandom, archivo_fisico: str):
     cantidad = 0   
-    if os.path.getsize(ARCHIVO_FISICO) != 0:
-        ARCHIVO_LOGICO.seek(0)
-        pickle.load(ARCHIVO_LOGICO)
-        longitud_reg = ARCHIVO_LOGICO.tell()
-        t = os.path.getsize(ARCHIVO_FISICO) 
-        
-        cantidad = t//longitud_reg
-    ARCHIVO_LOGICO.seek(0)
+    if os.path.getsize(archivo_fisico) != 0:
+        archivo_logico.seek(0)
+        pickle.load(archivo_logico)
+        longitud_reg = archivo_logico.tell()
+        tam_arch = os.path.getsize(archivo_fisico) 
+        cantidad = tam_arch // longitud_reg
+        archivo_logico.seek(0)
     return cantidad
-        
-def fn_busquedadico(ARCHIVO_LOGICO: io.BufferedRandom, ARCHIVO_FISICO: str, campo: str, data: int):
+
+def fn_busquedadico(archivo_logico: io.BufferedRandom, archivo_fisico: str, campo: str, data: int):
     dato = int(str(data).strip())
-    ARCHIVO_LOGICO.seek(0, 0)
-    registro = pickle.load(ARCHIVO_LOGICO)
-    tamregi = ARCHIVO_LOGICO.tell()
-    cantreg = int(os.path.getsize(ARCHIVO_FISICO) / tamregi)
+    archivo_logico.seek(0, 0)
+    registro = pickle.load(archivo_logico)
+    tamregi = archivo_logico.tell()
+    if tamregi == 0:
+        return -1
+    cantreg = int(os.path.getsize(archivo_fisico) / tamregi)
     inicio = 0
     fin = cantreg - 1
     medio = (inicio + fin) // 2
-    ARCHIVO_LOGICO.seek(medio * tamregi, 0) 
-    registro = pickle.load(ARCHIVO_LOGICO)
+    archivo_logico.seek(medio * tamregi, 0) 
+    registro = pickle.load(archivo_logico)
 
     while inicio <  fin and int(str(getattr(registro, campo)).strip()) != dato:
         if int(str(getattr(registro, campo)).strip()) > dato:
@@ -230,50 +232,51 @@ def fn_busquedadico(ARCHIVO_LOGICO: io.BufferedRandom, ARCHIVO_FISICO: str, camp
             inicio = medio + 1            
         
         medio = (inicio + fin) // 2
-        ARCHIVO_LOGICO.seek(medio * tamregi, 0)
-        registro = pickle.load(ARCHIVO_LOGICO)
+        archivo_logico.seek(medio * tamregi, 0)
+        registro = pickle.load(archivo_logico)
     if int(str(getattr(registro, campo)).strip()) == dato:
         return medio * tamregi
 
     return -1
 
-def fn_busquedasecuencial(ARCHIVO_LOGICO: io.BufferedRandom, ARCHIVO_FISICO: str, callback):
+def fn_busquedasecuencial(archivo_logico: io.BufferedRandom, archivo_fisico: str, callback):
     """ def busqueeda_especifica(regtemp, pos):
         if str(regtemp.propiedad).strip() == 'valor':
             localesActivos.append(regtemp)         
             return False """
 
-    tamañoarchivo = os.path.getsize(ARCHIVO_FISICO)
-    ARCHIVO_LOGICO.seek(0)
+    tam_archivo = os.path.getsize(archivo_fisico)
+    archivo_logico.seek(0)
     encontrado = False
 
-    while ARCHIVO_LOGICO.tell() < tamañoarchivo and encontrado == False:
-        posicion = ARCHIVO_LOGICO.tell()
-        regtemporal = pickle.load(ARCHIVO_LOGICO)
+    while archivo_logico.tell() < tam_archivo and encontrado == False:
+        posicion = archivo_logico.tell()
+        regtemporal = pickle.load(archivo_logico)
         encontrado = callback(regtemporal, posicion)
 
     return encontrado
 
-   
+
 #--------------------------------------------------------------#
 #                                                              #
 #                 FUNCIONES AUXILIARES                         #
 #                                                              #
 #--------------------------------------------------------------#
+
 def fn_text_center(data, space):
     mid = (space - len(data)) / 2
     parte_decimal = mid - int(mid)
     if str(parte_decimal) == "0.0":
         mid = int(mid)
-        return (" "*mid)+data+(" "*mid)
+        return (" " * mid) + data + (" " * mid)
     else:
         mid = int(mid)
-        return (" "*mid)+" "+data+(" "*mid)  
+        return (" " * mid)+" " + data+(" " * mid)  
 
 def fn_text_format(data: str, length: int):
     aux = ""
     if len(data) > length:
-        for i in range(0, length-3):
+        for i in range(0, length - 3):
             if data[i] == "\n":
                 aux += ""
             else:  
@@ -339,10 +342,11 @@ def pr_crear_titulo(titulo: str):
     cantidadLetra: int = len(titulo) # ES LA CANTIDAD DE LETRAS QUE TIENE EL TITULO
     columnaTamano: int = os.get_terminal_size().columns
 
-    for i in range(0, columnaTamano):
-        columnas = columnas + "_"
+    #for i in range(0, columnaTamano):
+    #    columnas = columnas + "_"
+    columnas = "_" * columnaTamano
     
-    copiarColumnas = (columnaTamano - cantidadLetra )//2
+    copiarColumnas = (columnaTamano - cantidadLetra ) // 2
 
     print(columnas)
     print("\n" + " " * copiarColumnas + titulo )
@@ -417,17 +421,17 @@ if not os.path.exists(CARPETA):
     
 if os.path.exists(CARPETA):
     # Archivo fiscos
-    FISICO_ARCHIVO_ESTUDIANTES= os.getcwd() + "/" + CARPETA + "/estudiantes.dat" 
-    FISICO_ARCHIVO_MODERADORES= os.getcwd() + "/"+ CARPETA + "/moderadores.dat" 
-    FISICO_ARCHIVO_REPORTES= os.getcwd() + "/" + CARPETA + "/reportes.dat"
-    FISICO_ARCHIVO_LIKES= os.getcwd() + "/" + CARPETA + "/likes.dat"
-    FISICO_ARCHIVO_ADMINISTRADORES= os.getcwd() + "/" + CARPETA + "/administradores.dat"
+    FISICO_ARCHIVO_ADMINISTRADORES = os.getcwd() + "/" + CARPETA + "/administradores.dat"
+    FISICO_ARCHIVO_MODERADORES = os.getcwd() + "/" + CARPETA + "/moderadores.dat" 
+    FISICO_ARCHIVO_ESTUDIANTES = os.getcwd() + "/" + CARPETA + "/estudiantes.dat" 
+    FISICO_ARCHIVO_REPORTES = os.getcwd() + "/" + CARPETA + "/reportes.dat"
+    FISICO_ARCHIVO_LIKES = os.getcwd() + "/" + CARPETA + "/likes.dat"
 
-    LOGICO_ARCHIVO_ESTUDIANTES= fn_crear_logico(FISICO_ARCHIVO_ESTUDIANTES) 
-    LOGICO_ARCHIVO_MODERADORES= fn_crear_logico(FISICO_ARCHIVO_MODERADORES) 
-    LOGICO_ARCHIVO_REPORTES= fn_crear_logico(FISICO_ARCHIVO_REPORTES)
-    LOGICO_ARCHIVO_LIKES= fn_crear_logico(FISICO_ARCHIVO_LIKES)
-    LOGICO_ARCHIVO_ADMINISTRADORES= fn_crear_logico(FISICO_ARCHIVO_ADMINISTRADORES)
+    LOGICO_ARCHIVO_ADMINISTRADORES = fn_crear_logico(FISICO_ARCHIVO_ADMINISTRADORES)
+    LOGICO_ARCHIVO_MODERADORES = fn_crear_logico(FISICO_ARCHIVO_MODERADORES) 
+    LOGICO_ARCHIVO_ESTUDIANTES = fn_crear_logico(FISICO_ARCHIVO_ESTUDIANTES) 
+    LOGICO_ARCHIVO_REPORTES = fn_crear_logico(FISICO_ARCHIVO_REPORTES)
+    LOGICO_ARCHIVO_LIKES = fn_crear_logico(FISICO_ARCHIVO_LIKES)
 
 # La lógica inicia acá
 
