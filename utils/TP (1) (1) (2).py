@@ -5,7 +5,9 @@ from getpass import getpass
 from datetime import datetime
 from math import factorial,comb
 import random
-
+fecha_actual = str(datetime.today().date())
+print(fecha_actual)
+input("")
 ##[indice, email, contra, activo/inactivo, fecha nacimiento, sexo, biografia, hobbies]
 
 "estudiantes:array[1...10,1...8] of strings"

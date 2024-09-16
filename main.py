@@ -3,12 +3,16 @@ import pickle
 import io
 import shutil
 import time
-import datetime
+from datetime import datetime
 import random
 import locale 
 import time 
 import getpass
 import string
+
+
+
+
 #from typing import Callable
 
 #--------------------------------------------------------------#
@@ -18,6 +22,7 @@ import string
 #--------------------------------------------------------------#
 
 CARPETA = "archivos"
+fecha_actual = str(datetime.today().date())
 
 #--------------------------------------------------------------#
 #                                                              #
@@ -42,6 +47,7 @@ class Estudiantes:
         self.pais=""
         self.ciudad=""
         self.fecha_nacimiento=""
+        self.ultima_conexion = ""
 
 class Usuario:
     def __init__(self):
@@ -132,6 +138,26 @@ def formatear_estudiantes(x: Estudiantes):
     x.pais=str(x.pais).ljust(32)
     x.ciudad=str(x.ciudad).ljust(32)
     x.fecha_nacimiento=str(x.fecha_nacimiento).ljust(10)
+    x.ultima_conexion=str(x.ultima_conexion).ljust(50)
+
+def normalizar_estudiante(x:Estudiantes):
+    x.id_estudiantes=str(x.id_estudiantes).strip() # Entero
+    x.email=str(x.email).strip()
+    x.nombre=str(x.nombre).strip()
+    x.sexo=str(x.sexo).strip()   
+    x.contrasena=str(x.contrasena).strip()
+    x.estado=str(x.estado).strip() #Booleano
+    x.hobbies=str(x.hobbies).strip()
+    x.materia_favorita=str(x.materia_favorita).strip()
+    x.deporte_favorito=str(x.deporte_favorito).strip()
+    x.materia_fuerte=str(x.materia_fuerte).strip()
+    x.materia_debil=str(x.materia_debil).strip()
+    x.biografia=str(x.biografia).strip()
+    x.pais=str(x.pais).strip()
+    x.ciudad=str(x.ciudad).strip()
+    x.fecha_nacimiento=str(x.fecha_nacimiento).strip()
+    x.ultima_conexion=str(x.ultima_conexion).strip()
+
 
 def formatear_moderadores(x: Moderadores):
     x.id_moderador = str(x.id_moderador).ljust(10).lower() #Entero
@@ -196,10 +222,13 @@ def fn_guardar_datos(registro: object, archivo_logico: io.BufferedRandom, archiv
     try:        
         if posicion == -1:
             posicion = t
+
         archivo_logico.seek(posicion)
         formateador(registro) 
         pickle.dump(registro, archivo_logico)
         archivo_logico.flush()
+        archivo_logico.seek(0)
+
     except (ValueError, TypeError):
         print("Se genero un error")
 
@@ -242,20 +271,16 @@ def fn_busquedadico(archivo_logico: io.BufferedRandom, archivo_fisico: str, camp
 
     return -1
 
-def fn_busquedasecuencial(archivo_logico: io.BufferedRandom, archivo_fisico: str, callback):
-    """ def busqueeda_especifica(regtemp, pos):
-        if str(regtemp.propiedad).strip() == 'valor':
-            localesActivos.append(regtemp)         
-            return False """
+def fn_busquedasecuencial(archivo_logico: io.BufferedRandom, archivo_fisico: str, campo:str,data:int | str):
 
     tam_archivo = os.path.getsize(archivo_fisico)
     archivo_logico.seek(0)
     encontrado = False
 
-    while archivo_logico.tell() < tam_archivo and encontrado == False:
-        posicion = archivo_logico.tell()
+    while archivo_logico.tell() < tam_archivo and encontrado == False :
         regtemporal = pickle.load(archivo_logico)
-        encontrado = callback(regtemporal, posicion)
+        if(str(getattr(regtemporal,campo)).strip() == str(data).strip()):
+            encontrado = True   
 
     return encontrado
 
@@ -266,7 +291,43 @@ def fn_busquedasecuencial(archivo_logico: io.BufferedRandom, archivo_fisico: str
 #                                                              #
 #--------------------------------------------------------------#
 
+def fn_diferencia_fechas(fecha1, fecha2):
+    # Asegurarse de que fecha1 y fecha2 sean objetos datetime
+    if isinstance(fecha1, str):
+        fecha1 = datetime.strptime(fecha1, "%Y-%m-%d %H:%M:%S")
+    if isinstance(fecha2, str):
+        fecha2 = datetime.strptime(fecha2, "%Y-%m-%d %H:%M:%S")
+
+    # Calcular la diferencia entre las fechas
+    diferencia = abs(fecha2 - fecha1)
+
+    # Segundos totales
+    segundos_totales = int(diferencia.total_seconds())
+
+    # Calcular días, horas, minutos y segundos
+    dias = segundos_totales // 86400  # 86400 segundos en un día
+    horas = (segundos_totales % 86400) // 3600  # 3600 segundos en una hora
+    minutos = (segundos_totales % 3600) // 60
+    segundos = segundos_totales % 60
+
+    # Mostrar resultados
+    resultado = ""
+    if dias > 0:
+        
+        resultado = f"{dias} día(s) "
+    elif horas > 0:
+        resultado = f"{horas} hora(s) "
+    elif minutos > 0:
+        resultado = f"{minutos} minuto(s) "
+    elif segundos > 0:
+        resultado = f"{segundos} segundo(s)"
+    else:
+        resultado ="1 segundo"
+
     
+    return resultado
+    
+
 
 def fn_verificar_array_vacio(array:list,limite:int):
     vacio = True
@@ -416,10 +477,12 @@ def animate_banner():
 "var: numerColsDate, columnas, filas, space = tipo interger"
 "var: tamano_termina = tipo float"
 "var: techo, pared, header = tipo string"
-def pr_tabla(colsDate: list[str], data: list[str]):
+def pr_tabla(colsDate: list[str], data: list[str],limpiar=True):
     #cols=["CodLocal", "Nombre", "Estado"]
     # Obtener el tamaño de la terminal
-    os.system("cls")
+    if(limpiar):
+        os.system("cls")
+
     tamano_terminal = os.get_terminal_size()
     
     # Extraer el número de columnas y filas
@@ -483,13 +546,65 @@ def pr_crear_titulo(titulo: str):
 
 
 
+def pr_ver_candidatos():
+    #Mostrar nombre, fecha de nacimiento, edad, biogra􀄰a y hobbies
+    cantidad_registros = fn_buscar_cantidad_de_registros(LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES)
+    estudiantes:list[Estudiantes] = [None] * cantidad_registros
+    estudiante_vista = [["" for _ in range(0,5)] for _ in range(0,cantidad_registros)]
+
+    t = os.path.getsize(FISICO_ARCHIVO_ESTUDIANTES)
+
+    LOGICO_ARCHIVO_ESTUDIANTES.seek(0)
+    i = 0
+    while LOGICO_ARCHIVO_ESTUDIANTES.tell() < t and   i <  cantidad_registros:
+        reg:Estudiantes = pickle.load(LOGICO_ARCHIVO_ESTUDIANTES)
+        normalizar_estudiante(reg)
+        estudiantes[i] = reg
+        i=i+1
+    
+    for k in range(0,cantidad_registros):
+        estudiante_vista[k][0]=estudiantes[k].nombre
+
+        if(estudiantes[k].fecha_nacimiento != ""):
+            estudiante_vista[k][1]=estudiantes[k].fecha_nacimiento
+        else:
+            estudiante_vista[k][1]="Sin datos"
+
+
+        if(estudiantes[k].biografia != ""):
+            estudiante_vista[k][2]=estudiantes[k].biografia
+        else:
+            estudiante_vista[k][2]="Sin datos"
+
+
+        if(estudiantes[k].hobbies) != "":
+            estudiante_vista[k][3]=estudiantes[k].hobbies
+        else:
+            estudiante_vista[k][3]="Sin datos"
+
+        if(estudiantes[k].ultima_conexion) != "":
+            ultima_conexion=datetime.strptime(estudiantes[k].ultima_conexion, "%Y-%m-%d %H:%M:%S.%f")
+            estudiante_vista[k][4]=fn_diferencia_fechas(ultima_conexion,datetime.now())
+        else:
+            estudiante_vista[k][4]="Sin datos"
+    estudiantes_columnas= ["Nombre","Fecha Nacimiento","Biografia","Hobbies","Ultima Conexion"]
+
+    pr_crear_titulo("CANDIDATOS")
+    print("")
+    pr_tabla(estudiantes_columnas,estudiante_vista)
+
+    nombre = input("\nIngrese el nombre con quien desea hacer match: ")
+    
+    
+
+
 def pr_crear_estudiantes():
     ver_contraseña = False
     contraseña=""
     estudiante = Estudiantes()
     columnas = ["Email","Contraseña","Nombre","Sexo"]
     estudiante_ram = [["","","",""]]
-    pr_tabla(columnas,estudiante_ram)
+    pr_tabla(columnas,estudiante_ram,True)
     opc = -1
     while opc != 0 and opc != 5:
         print("\n1-Email \n\n2-Contraseña \n\n3-Nombre \n\n4-Sexo \n\n5-Guardar datos \n\n0-Volver\n")
@@ -497,7 +612,11 @@ def pr_crear_estudiantes():
         match(opc):
             case(1):
                 pr_tabla(columnas,estudiante_ram)
-                email = input("Ingrese su email: ")
+                email=input("Ingrese su email: ")
+                while fn_busquedasecuencial(LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES,"email",str(email).lower()):  
+                    print("El email ingresado no es valido ya que existe una persona ")
+                    email = input("Ingrese su email: ")
+
                 estudiante_ram[0][0] = email
             case(2):
                 pr_tabla(columnas,estudiante_ram)                
@@ -547,7 +666,8 @@ def pr_crear_estudiantes():
                         estudiante.email = email
                         estudiante.nombre = nombre
                         estudiante.sexo= sexo
-                        estudiante.id_estudiantes=fn_buscar_cantidad_de_registros(LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES)
+                        estudiante.id_estudiantes= fn_buscar_cantidad_de_registros(LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES)
+                        estudiante.ultima_conexion= datetime.now()
                         fn_guardar_datos(estudiante,LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES,formatear_estudiantes)
                     else:
                         opc =-1
@@ -581,7 +701,6 @@ def pr_eliminar_perfil():
     else:
         print("\nSera devuelto al menu principal, le agradecemos por quedarse con nosotros.\n")
         pr_pausar_consola()
-pr_eliminar_perfil()
 
 def pr_menu_estudiantes():
     opc = -1
@@ -641,6 +760,7 @@ def pr_inicializar_programa():
         fn_guardar_datos(admin, LOGICO_ARCHIVO_ADMINISTRADORES, FISICO_ARCHIVO_ADMINISTRADORES, formatear_administradores)
 
 
+
 #--------------------------------------------------------------#
 #                                                              #
 #                PROGRAMA PRINCIPAL                            #
@@ -665,9 +785,11 @@ if os.path.exists(CARPETA):
     LOGICO_ARCHIVO_LIKES = fn_crear_logico(FISICO_ARCHIVO_LIKES)
 
 # La lógica inicia acá
-
-
+""" pr_eliminar_perfil()
+ """
 
 
 # Última línea
 fn_cerrar_logico()
+
+
