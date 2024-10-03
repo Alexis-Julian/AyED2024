@@ -229,6 +229,34 @@ def fn_validar_rango_str(inicio: str, limite: str):
 
     return opc
 
+
+def validar_none(mensaje:str,longitud:int):
+    data = input (mensaje)
+    while (len(data) > longitud) or data == "":
+        data= input(f"La longitud que ingreso es mayor a la deseada vuelva a ingresar los datos [{longitud} max]: ")
+    return data
+
+
+def fn_validar_fecha():
+    band  = True
+    while band:
+        fecha = input("Ingrese nueva fecha en formato YYYY-MM-DD: ").strip()
+        try:
+            fecha_obj = datetime.strptime(fecha, '%Y-%m-%d')
+            anio_actual = datetime.today().year
+            mes_actual= datetime.today().month
+            dia_actual= datetime.today().day
+            if 1900 >= fecha_obj.year or fecha_obj.year >= anio_actual:
+                print(f"\nEl año debe ser mayor a 1900 y menor o igual a {anio_actual}")
+            else:
+                band= False
+        except ValueError:
+            print("\nLa fecha debe tener el formato YYYY-MM-DD\n")
+    return fecha
+
+
+
+
 def fn_guardar_datos(registro: object, archivo_logico: io.BufferedRandom, archivo_fisico: str, formateador, posicion: int = -1):
     """ Guarda el registro en su respectivo archivo """
 
@@ -811,7 +839,138 @@ def pr_eliminar_perfil():
         pr_pausar_consola()
 
 def pr_editar_datos_personales():
-    ""
+    try:
+        pos = fn_busquedasecuencial(LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES,"id_estudiantes",user_sesion.id)
+        reg:Estudiantes = fn_traer_registro(LOGICO_ARCHIVO_ESTUDIANTES,pos,normalizar_estudiante)
+    except:
+        print("Se genero un error en recuperar el usuario, Vuelva a iniciar el programa...")
+        return  pr_pausar_consola()
+        
+    datos_personales:list = [""]*11
+    #DATOS PRIMARIOS
+    datos_personales[0] = reg.nombre
+    datos_personales[1] = reg.sexo
+    datos_personales[2] = reg.pais
+    datos_personales[3] = reg.ciudad
+    datos_personales[4] = reg.fecha_nacimiento
+
+    #DATOS SECUNDARIOS
+    if(reg.hobbies!=""):
+        datos_personales[5] = reg.hobbies
+    else:
+        datos_personales[5] = "Sin datos"
+
+    if(reg.materia_favorita!=""):
+        datos_personales[6] = reg.materia_favorita
+    else:
+        datos_personales[6] = "Sin datos"
+
+    if(reg.deporte_favorito != ""):
+        datos_personales[7] = reg.deporte_favorito
+    else:
+        datos_personales[7] = "Sin datos"
+
+    if(reg.materia_fuerte != ""):
+        datos_personales[8] = reg.materia_fuerte
+    else:
+        datos_personales[8] = "Sin datos"
+
+    if(reg.materia_debil != ""):
+        datos_personales[9] = reg.materia_debil
+    else:
+        datos_personales[9] = "Sin datos"
+
+    if(reg.biografia != ""):
+        datos_personales[10] = reg.biografia
+    else:
+        datos_personales[10] = "Sin datos"
+
+    def pr_guardar_datos():
+        print("Desea guardar sus datos? ")
+        si_no = fn_validar_si_no()
+        if(si_no=="si" ):
+            reg.nombre =  datos_personales[0] 
+            reg.sexo =  datos_personales[1] 
+            reg.pais =  datos_personales[2] 
+            reg.ciudad =  datos_personales[3] 
+            reg.fecha_nacimiento =  datos_personales[4] 
+            reg.hobbies =  datos_personales[5] 
+            reg.materia_favorita =  datos_personales[6] 
+            reg.deporte_favorito =  datos_personales[7] 
+            reg.materia_fuerte =  datos_personales[8] 
+            reg.materia_debil =  datos_personales[9] 
+            reg.biografia  = datos_personales[10]
+            fn_guardar_datos(reg,LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES,formatear_estudiantes,pos)
+            print("Su datos se guardaron correctamente...")
+            pr_pausar_consola()
+        
+        
+
+    def pr_editar_datos_secundarios():
+        opc = ""
+        while opc != "v":
+            pr_crear_titulo("DATOS SECUNDARIOS")
+            print("")
+            pr_tabla(["Hobbie","Materia Fav","Deporte Fav","Materia 💪","Materia Debil","Biografia"],[datos_personales[-6:]],False)
+            print("\n[A].Hobbie \n\n[B].Materia Favorita \n\n[C].Deporte Favorito \n\n[D].Materia Fuerte \n\n[E].Materia Debil \n\n[F].Biografia \n\n[G].Guardar datos \n\n[V].Volver ")
+            print("")
+            opc = fn_validar_rango_str("a","v")
+            match(opc):
+                case("a"):
+                    hobbie = input ("Ingrese su hobbie: ")
+                    datos_personales[5]=hobbie
+                case("b"):
+                    materia_fav=input("Ingrese materia favorita: ")
+                    datos_personales[6]=materia_fav
+                case("c"):
+                    deporte_fav=input("Ingres deporte favorito: ")
+                    datos_personales[7]=deporte_fav
+                case("d"):
+                    materia_fue=input("Ingrese su materia fuerte: ")
+                    datos_personales[8]=materia_fue
+                case("e"):
+                    materia_deb= input("Ingrese su materia debil: ")
+                    datos_personales[9]=materia_deb
+                case("f"):
+                    biografia=input("Ingrese su biografia: ")
+                    datos_personales[10]=biografia
+                case ("g"):
+                    pr_guardar_datos()
+                case _:
+                    ""
+                
+    opc=""
+    while opc != "v": 
+        pr_crear_titulo("EDITAR DATOS PERSONALES")
+        print("")
+
+        pr_tabla(["Nombre","Sexo","Pais","Ciudad","Fecha de nacimiento"],[datos_personales[:-6]],False)
+        print("\n[A].Nombre \n\n[B].Sexo \n\n[C].Pais \n\n[D].Ciudad \n\n[E].Fecha de nacimiento \n\n[F].Datos Secundarios \n\n[G].Guardar Datos \n\n[V].Volver\n\n")
+
+        opc=input("Ingrese una opcion: ")
+        match(opc):
+            case("a"):
+                nombre = input("Ingrese su nombre: ")
+                datos_personales[0] = nombre
+            case("b"):
+                sexo = input("Ingrese su sexo: ")
+                datos_personales[1] = sexo
+            case("c"):
+                pais = input ("Ingrese su nacionalidad: ")
+                datos_personales[2] = pais
+            case("d"):
+                ciudad = input("Ingrese su ciudad: ")
+                datos_personales[3] = ciudad
+            case("e"):
+                fecha  = ""
+                datos_personales[4] = fecha
+            case ("f"):
+                pr_editar_datos_secundarios()       
+            case ("g"):
+                pr_guardar_datos()
+            case("v"):
+                ""
+                
 
 def pr_gestionar_perfil():
     opc = ""
@@ -1046,8 +1205,9 @@ if os.path.exists(CARPETA):
 #pr_crear_estudiantes()
 #pr_ver_candidatos()
 
+
 #pr_crear_estudiantes()
-pr_inicializar_programa()
+#pr_inicializar_programa()
 #pr_iniciar_sesion()
 # Última línea
 fn_cerrar_logico()
