@@ -23,6 +23,9 @@ import string
 
 CARPETA = "archivos"
 fecha_actual = str(datetime.today().date())
+ROLE_USUARIO="U"
+ROLE_MODERADOR="M"
+ROLE_ADMINISTRADOR="A"
 
 #--------------------------------------------------------------#
 #                                                              #
@@ -48,23 +51,16 @@ class Estudiantes:
         self.ciudad=""
         self.fecha_nacimiento=""
         self.ultima_conexion = ""
+        self.clave_recuperacion = "" 
 
 class Usuario:
     def __init__(self):
-        self.id_usuario = 0
+        self.id = 1
         self.email = ""
         self.nombre= ""
-        self.sexo= ""
-        self.hobbies = ""
-        self.materia_favorita=""
-        self.deporte_favorito=""
-        self.materia_fuerte=""
-        self.materia_debil=""
-        self.biografia=""
-        self.pais=""
-        self.ciudad=""
-        self.fecha_nacimiento=""
-
+        self.role = ""
+        self.estado = True
+       
 class Moderadores:
     def __init__(self):
         self.id_moderador=0
@@ -89,6 +85,10 @@ class Reportes:
         self.id_reportado=0
         self.razon_reporte=""
         self.estado= 0
+
+# Crear la instancia del usuario genérico
+user_sesion = Usuario()
+
 
 
 #--------------------------------------------------------------#
@@ -139,25 +139,7 @@ def formatear_estudiantes(x: Estudiantes):
     x.ciudad=str(x.ciudad).ljust(32)
     x.fecha_nacimiento=str(x.fecha_nacimiento).ljust(10)
     x.ultima_conexion=str(x.ultima_conexion).ljust(50)
-
-def normalizar_estudiante(x:Estudiantes):
-    x.id_estudiantes=str(x.id_estudiantes).strip() # Entero
-    x.email=str(x.email).strip()
-    x.nombre=str(x.nombre).strip()
-    x.sexo=str(x.sexo).strip()   
-    x.contrasena=str(x.contrasena).strip()
-    x.estado=str(x.estado).strip() #Booleano
-    x.hobbies=str(x.hobbies).strip()
-    x.materia_favorita=str(x.materia_favorita).strip()
-    x.deporte_favorito=str(x.deporte_favorito).strip()
-    x.materia_fuerte=str(x.materia_fuerte).strip()
-    x.materia_debil=str(x.materia_debil).strip()
-    x.biografia=str(x.biografia).strip()
-    x.pais=str(x.pais).strip()
-    x.ciudad=str(x.ciudad).strip()
-    x.fecha_nacimiento=str(x.fecha_nacimiento).strip()
-    x.ultima_conexion=str(x.ultima_conexion).strip()
-
+    x.clave_recuperacion = str(x.ultima_conexion).ljust(80)
 
 def formatear_moderadores(x: Moderadores):
     x.id_moderador = str(x.id_moderador).ljust(10).lower() #Entero
@@ -180,6 +162,37 @@ def formatear_reportes(x: Reportes):
     x.razon_reporte = str(x.razon_reporte).ljust(255).lower() 
     x.estado = str(x.id_reportado).ljust(10).lower() #Entero
 
+
+#--------------------------------------------------------------#
+#                                                              #
+#                NORMALIZADORES                                #
+#                                                              #
+#--------------------------------------------------------------#
+
+
+def normalizar_estudiante(x:Estudiantes):
+    x.id_estudiantes=str(x.id_estudiantes).strip() # Entero
+    x.email=str(x.email).strip()
+    x.nombre=str(x.nombre).strip()
+    x.sexo=str(x.sexo).strip()   
+    x.contrasena=str(x.contrasena).strip()
+    x.estado=str(x.estado).strip() #Booleano
+    x.hobbies=str(x.hobbies).strip()
+    x.materia_favorita=str(x.materia_favorita).strip()
+    x.deporte_favorito=str(x.deporte_favorito).strip()
+    x.materia_fuerte=str(x.materia_fuerte).strip()
+    x.materia_debil=str(x.materia_debil).strip()
+    x.biografia=str(x.biografia).strip()
+    x.pais=str(x.pais).strip()
+    x.ciudad=str(x.ciudad).strip()
+    x.fecha_nacimiento=str(x.fecha_nacimiento).strip()
+    x.ultima_conexion=str(x.ultima_conexion).strip()
+    x.clave_recuperacion = str(x.ultima_conexion).strip()
+
+def normalizar_likes(x:Likes):
+    x.destinatario=str(x.destinatario).strip()
+    x.remitente=str(x.remitente).strip()
+
 #--------------------------------------------------------------#
 #                                                              #
 #                FUNCIONES DE VALIDACION DE DATOS              #
@@ -188,10 +201,10 @@ def formatear_reportes(x: Reportes):
 
 "var: respuesta = tipo string"
 def fn_validar_si_no():
-    respuesta=input("Ingrese si o no: ") 
-    while (respuesta != "si") and  (respuesta != "no"):
+    respuesta=input("Ingrese si o no: ").lower() 
+    while (respuesta != "si") and  (respuesta.lower() != "no"):
         print("No es un opción valida, ingrese si o no")
-        respuesta=input("Ingrese si o no: ")
+        respuesta=input("Ingrese si o no: ").lower()
     return respuesta
 
 "var: numero, inicio, limite = tipo interger"
@@ -209,15 +222,16 @@ def fn_validar_rango(inicio: int, limite: int):
 "var: inicio, limite, opc = tipo string"
 def fn_validar_rango_str(inicio: str, limite: str):
     opc = input("Ingrese una opcion:").lower()
-    
-    while not inicio <= opc <= limite:
+
+    while not(opc >= inicio and opc <=limite and len(opc) == 1):
         print("\nError, ingrese una opcion valida.\n")
         opc = input("Ingrese una opcion: ")
-    
+
     return opc
 
 def fn_guardar_datos(registro: object, archivo_logico: io.BufferedRandom, archivo_fisico: str, formateador, posicion: int = -1):
     """ Guarda el registro en su respectivo archivo """
+
     t = os.path.getsize(archivo_fisico)
     try:        
         if posicion == -1:
@@ -272,17 +286,21 @@ def fn_busquedadico(archivo_logico: io.BufferedRandom, archivo_fisico: str, camp
     return -1
 
 def fn_busquedasecuencial(archivo_logico: io.BufferedRandom, archivo_fisico: str, campo:str,data:int | str):
-
     tam_archivo = os.path.getsize(archivo_fisico)
     archivo_logico.seek(0)
     encontrado = False
+    pos = -1
 
     while archivo_logico.tell() < tam_archivo and encontrado == False :
+        pos = archivo_logico.tell()
         regtemporal = pickle.load(archivo_logico)
         if(str(getattr(regtemporal,campo)).strip() == str(data).strip()):
             encontrado = True   
 
-    return encontrado
+    if(encontrado):
+        return pos
+    else:
+        return -1
 
 
 #--------------------------------------------------------------#
@@ -290,6 +308,12 @@ def fn_busquedasecuencial(archivo_logico: io.BufferedRandom, archivo_fisico: str
 #                 FUNCIONES AUXILIARES                         #
 #                                                              #
 #--------------------------------------------------------------#
+def verificar_like(id_remitente,id_destinatario):
+    ""
+
+def verificar_match(id_remitente,id_destinatario):
+    ""
+
 
 def fn_diferencia_fechas(fecha1, fecha2):
     # Asegurarse de que fecha1 y fecha2 sean objetos datetime
@@ -328,7 +352,6 @@ def fn_diferencia_fechas(fecha1, fecha2):
     return resultado
     
 
-
 def fn_verificar_array_vacio(array:list,limite:int):
     vacio = True
     try:
@@ -361,6 +384,7 @@ def fn_text_format(data: str, length: int):
     else:
         aux = data
     return aux
+
 
 
 
@@ -546,54 +570,119 @@ def pr_crear_titulo(titulo: str):
 
 
 
-def pr_ver_candidatos():
-    #Mostrar nombre, fecha de nacimiento, edad, biogra􀄰a y hobbies
-    cantidad_registros = fn_buscar_cantidad_de_registros(LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES)
-    estudiantes:list[Estudiantes] = [None] * cantidad_registros
-    estudiante_vista = [["" for _ in range(0,5)] for _ in range(0,cantidad_registros)]
+def fn_obtener_registros_en_array(ar_logico,ar_fisico,normalizador):
+    cantidad_registros = fn_buscar_cantidad_de_registros(ar_logico,ar_fisico)
+    registros = [None] * cantidad_registros
+    t = os.path.getsize(ar_fisico)
 
-    t = os.path.getsize(FISICO_ARCHIVO_ESTUDIANTES)
-
-    LOGICO_ARCHIVO_ESTUDIANTES.seek(0)
+    ar_logico.seek(0)
     i = 0
-    while LOGICO_ARCHIVO_ESTUDIANTES.tell() < t and   i <  cantidad_registros:
-        reg:Estudiantes = pickle.load(LOGICO_ARCHIVO_ESTUDIANTES)
-        normalizar_estudiante(reg)
-        estudiantes[i] = reg
+    while ar_logico.tell() < t and   i <  cantidad_registros:
+        reg = pickle.load(ar_logico)
+        normalizador(reg)
+        registros[i] = reg
         i=i+1
+    return registros
+
+
+
+def fn_cuadricular_estudiantes(estudiantes:list[Estudiantes]):
+    descontar = 0
+    cantidad_registros = fn_buscar_cantidad_de_registros(LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES)
+    estudiante_vista = [["" for _ in range(0,5)] for _ in range(0,cantidad_registros)]
     
+
     for k in range(0,cantidad_registros):
-        estudiante_vista[k][0]=estudiantes[k].nombre
 
-        if(estudiantes[k].fecha_nacimiento != ""):
-            estudiante_vista[k][1]=estudiantes[k].fecha_nacimiento
+        if(estudiantes[k].estado != "B" and int(estudiantes[k].id_estudiantes) != int(user_sesion.id)):
+
+            estudiante_vista[k][0]=estudiantes[k].nombre
+
+            if(estudiantes[k].fecha_nacimiento != ""):
+                estudiante_vista[k][1]=estudiantes[k].fecha_nacimiento
+            else:
+                estudiante_vista[k][1]="Sin datos"
+
+
+            if(estudiantes[k].biografia != ""):
+                estudiante_vista[k][2]=estudiantes[k].biografia
+            else:
+                estudiante_vista[k][2]="Sin datos"
+
+
+            if(estudiantes[k].hobbies) != "":
+                estudiante_vista[k][3]=estudiantes[k].hobbies
+            else:
+                estudiante_vista[k][3]="Sin datos"
+
+            if(estudiantes[k].ultima_conexion) != "":
+                ultima_conexion=datetime.strptime(estudiantes[k].ultima_conexion, "%Y-%m-%d %H:%M:%S.%f")
+                estudiante_vista[k][4]=fn_diferencia_fechas(ultima_conexion,datetime.now())
+            else:
+                estudiante_vista[k][4]="Sin datos"
         else:
-            estudiante_vista[k][1]="Sin datos"
+            descontar = descontar + 1
+    
+    #* EN ESTE BLOQUE SE LIMPIAN LOS ESTUDIANTES QUE NO CUMPLEN CON EL PROGRAMA LOS DADOS DE BAJA Y SI MISMO 
+    estudiante_limpio = [["" for _ in range(0,5)] for _ in range(0,cantidad_registros-descontar)]
+    for h in range(0,cantidad_registros):
+        for l in range(0,5):
+            if(estudiante_vista[h][0] != ""):
+                estudiante_limpio[h][l]=estudiante_vista[h][l]
+    
+    return estudiante_limpio
 
 
-        if(estudiantes[k].biografia != ""):
-            estudiante_vista[k][2]=estudiantes[k].biografia
-        else:
-            estudiante_vista[k][2]="Sin datos"
+def pr_ver_candidatos():
+    estudiantes = fn_obtener_registros_en_array(LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES,normalizar_estudiante)
+
+    if(len(estudiantes) ==0):
+        pr_crear_titulo("No existen candidatos")
+        print("")
+        return pr_pausar_consola() 
 
 
-        if(estudiantes[k].hobbies) != "":
-            estudiante_vista[k][3]=estudiantes[k].hobbies
-        else:
-            estudiante_vista[k][3]="Sin datos"
+    estudiante_vista = fn_cuadricular_estudiantes(estudiantes)
+    likes = fn_obtener_registros_en_array(LOGICO_ARCHIVO_LIKES,FISICO_ARCHIVO_LIKES,normalizar_likes)
 
-        if(estudiantes[k].ultima_conexion) != "":
-            ultima_conexion=datetime.strptime(estudiantes[k].ultima_conexion, "%Y-%m-%d %H:%M:%S.%f")
-            estudiante_vista[k][4]=fn_diferencia_fechas(ultima_conexion,datetime.now())
-        else:
-            estudiante_vista[k][4]="Sin datos"
-    estudiantes_columnas= ["Nombre","Fecha Nacimiento","Biografia","Hobbies","Ultima Conexion"]
+    print(likes)
+    input("")
+
+    estudiantes_columnas= ["Nombre","F.Nacimiento","Biografia","Hobbies","Ult.Conexion"]
+    pr_crear_titulo("CANDIDATOS")
+    print("")
+    pr_tabla(estudiantes_columnas,estudiante_vista,False)
+
+
+    nombre = input("\nIngrese un nombre valido con quien desea hacer match [S-Salir]: ")
+    pos = fn_busquedasecuencial(LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES,"nombre",nombre)
+    while nombre != "S" and pos == -1:
+        nombre = input("\nIngrese un nombre valido con quien desea hacer match [S-Salir]: ")
+        pos = fn_busquedasecuencial(LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES,"nombre",nombre)
+
+    if(nombre == "S" ):
+        return    
 
     pr_crear_titulo("CANDIDATOS")
     print("")
-    pr_tabla(estudiantes_columnas,estudiante_vista)
+    pr_tabla(estudiantes_columnas,estudiante_vista,False)
 
-    nombre = input("\nIngrese el nombre con quien desea hacer match: ")
+    print("\nSu like esta a punto de ser enviado esta seguro de esta accion? Si-[ACEPTAR] No-[CANCELAR] \n")
+    si_no= fn_validar_si_no()
+    
+    if(si_no == "si"):
+        like = Likes()
+        print("Su like ha sido enviado. ")
+        reg_est:Estudiantes = fn_traer_registro(LOGICO_ARCHIVO_ESTUDIANTES,pos,normalizar_estudiante)
+
+        like.destinatario = reg_est.id_estudiantes
+        like.remitente = user_sesion.id
+
+        fn_guardar_datos(like,LOGICO_ARCHIVO_LIKES,FISICO_ARCHIVO_LIKES,formatear_likes)        
+    else:
+        print("Su like fue cancelado con exito.")
+        
+    input("")
     
     
 
@@ -613,7 +702,7 @@ def pr_crear_estudiantes():
             case(1):
                 pr_tabla(columnas,estudiante_ram)
                 email=input("Ingrese su email: ")
-                while fn_busquedasecuencial(LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES,"email",str(email).lower()):  
+                while fn_busquedasecuencial(LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES,"email",str(email).lower()) != -1:  
                     print("El email ingresado no es valido ya que existe una persona ")
                     email = input("Ingrese su email: ")
 
@@ -663,11 +752,14 @@ def pr_crear_estudiantes():
                     print(f"\n\n¿Desea guardar su datos {nombre}? Los datos ha guardarse son los indicados arriba 🔼")
                     si_no = fn_validar_si_no()
                     if(si_no == "si"):
+                        #AGREGAR UNA CANCELACION POR SI SE ARREPIENTE DE CREAR LA CUENTA
+                        clave = input("Por seguridad de su cuenta ingrese una clave unica: ")
                         estudiante.email = email
                         estudiante.nombre = nombre
                         estudiante.sexo= sexo
                         estudiante.id_estudiantes= fn_buscar_cantidad_de_registros(LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES)
                         estudiante.ultima_conexion= datetime.now()
+                        estudiante.clave_recuperacion = clave
                         fn_guardar_datos(estudiante,LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES,formatear_estudiantes)
                     else:
                         opc =-1
@@ -679,6 +771,15 @@ def pr_crear_estudiantes():
                 ""
         pr_tabla(columnas,estudiante_ram)
 
+
+def fn_traer_registro(archivo_logico:io.BufferedRandom,pos:str,normalizador):
+    try:
+        archivo_logico.seek(pos)
+        reg = pickle.load(archivo_logico)
+        normalizador(reg)
+        return reg
+    except:
+        print("Se genero un error en extraccion del archivo")
 
 def pr_eliminar_perfil():
     #VAMOOS A MOSTRAR UNA CUADRILLA CON EL PERFIL
@@ -694,6 +795,13 @@ def pr_eliminar_perfil():
         if(letras_str == intento):
             print("\nSu perfil se eliminara muchas gracias por estar con nosotros vuelva pronto.\n")
             pr_pausar_consola()
+
+            #TODO: CAMBIAR POR BUSQUEDA DICTOMICA EN VEZ DE SECUENCIAL 
+            pos = fn_busquedasecuencial(LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES,"id_estudiantes",user_sesion.id)
+            reg:Estudiantes = fn_traer_registro(LOGICO_ARCHIVO_ESTUDIANTES,pos,normalizar_estudiante)
+            reg.estado = "B"
+            fn_guardar_datos(reg,LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES,formatear_estudiantes,pos)
+            user_sesion.estado = False
         else:
             print("\nUsted ingreso mal sus letras mostradas en pantalla, para volver a intentar eliminar su perfil ingrese nuevamente a este menu.\n")
             pr_pausar_consola()
@@ -702,10 +810,48 @@ def pr_eliminar_perfil():
         print("\nSera devuelto al menu principal, le agradecemos por quedarse con nosotros.\n")
         pr_pausar_consola()
 
+def pr_editar_datos_personales():
+    ""
+
+def pr_gestionar_perfil():
+    opc = ""
+
+    while opc != "c" and user_sesion.estado:
+        pr_crear_titulo("Gestionar mi perfil")
+        print("\na. Editar mi datos personales\n \nb. Eliminar mi perfil\n \nc. Volver\n")
+        opc = fn_validar_rango_str("a","c")
+        match(opc):
+            case("a"):
+                pr_editar_datos_personales()
+            case("b"):
+                pr_eliminar_perfil()
+            case _:
+                ""
+
+def pr_reportar_candidatos():
+    ""
+    input("")
+
+def pr_gestionar_candidatos():
+    opc = ""
+    while opc != "c":
+        pr_crear_titulo("Gestionar Candidatos")
+        print("\na. Ver candidatos\n \nb. Reportar candidatos\n \nc. Volver\n")
+        opc = fn_validar_rango_str("a","c")
+        match(opc):
+            case("a"):
+                pr_ver_candidatos()            
+            case("b"):
+                pr_reportar_candidatos()
+            case _:
+                ""
+
+
 def pr_menu_estudiantes():
     opc = -1
-    while opc != 0:  
-        print("\n1. Gestionar mi perfil \n2. Gestionar candidatos \n3. Matcheos \n4. Reportes estadísticos \n0. Salir")
+    while opc != 0 and user_sesion.estado:          
+        pr_crear_titulo("Menu principal")
+        print("\n1. Gestionar mi perfil\n \n2. Gestionar candidatos\n \n3. Matcheos\n \n4. Reportes estadísticos\n \n0. Salir\n")
         opc = fn_validar_rango(0, 4)
         match opc:
             case 1:
@@ -734,7 +880,7 @@ def pr_menu_moderador():
             case _:
                 ""
 
-def pr_menu_administrador():
+def pr_menu_administrador(): 
     opc = -1
     while opc != 0:
         print("\n1. Gestionar usuarios \n2. Gestionar Reportes \n3. Reportes Estadísticos \n0. Salir")
@@ -749,7 +895,7 @@ def pr_menu_administrador():
             case _:
                 ""
 
-def pr_inicializar_programa():
+def pr_inicializar_datos():
     administradores = [["pepe@gmail.com", "pepe"], ["pedro@gmail.com", "pepe"], ["lorenzo@gmail.com", "pepe"]]
 
     for i in range(0, len(administradores)):
@@ -759,6 +905,118 @@ def pr_inicializar_programa():
         admin.id_admin = fn_buscar_cantidad_de_registros(LOGICO_ARCHIVO_ADMINISTRADORES, FISICO_ARCHIVO_ADMINISTRADORES)
         fn_guardar_datos(admin, LOGICO_ARCHIVO_ADMINISTRADORES, FISICO_ARCHIVO_ADMINISTRADORES, formatear_administradores)
 
+
+def pr_olvido_contrasena():
+    #PRIMERO HACER PREGUNTAS DE SEGURIDAD EN CREAR ESTUDIANTES 
+    #PARA PODER CREAR ESTE MENU Y PREGUNTAR EN BASE A ESO
+    ""
+
+def pr_verificar_usuario(email:str,contrasena:str) -> bool:
+    reg_user:Estudiantes
+    verificado = False
+    
+    #VERIFICAR USUARIOS 
+    pos = fn_busquedasecuencial(LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES,"email",email)
+    #Si no lo encuentra devuelve no verificado
+    if(pos == -1 ):
+        return verificado 
+
+    #Logia de lectura de archivo
+    LOGICO_ARCHIVO_ESTUDIANTES.seek(pos,0)
+    reg_user = pickle.load(LOGICO_ARCHIVO_ESTUDIANTES)
+    normalizar_estudiante(reg_user)
+
+    #Si todo es correcto pone el verificado en verdadero 
+    if (reg_user.contrasena == contrasena and str(reg_user.estado).upper() != "B"):
+        verificado = True  
+        user_sesion.id = reg_user.id_estudiantes
+        user_sesion.nombre = reg_user.nombre
+        user_sesion.email = reg_user.email
+        user_sesion.role= ROLE_USUARIO
+
+    #VERIFICAR MODERADORES
+    pos = fn_busquedasecuencial(LOGICO_ARCHIVO_MODERADORES,FISICO_ARCHIVO_MODERADORES,"email",email)
+    #Si no lo encuentra devuelve no verificado
+    if(pos == -1 ):
+        return verificado 
+
+    #Logica de lectura de archivo   
+    LOGICO_ARCHIVO_MODERADORES.seek(pos,0)
+    reg_moderador:Moderadores = pickle.load(LOGICO_ARCHIVO_MODERADORES)
+    
+    if(reg_moderador.contrasena==contrasena):
+        verificado = True
+        user_sesion.id=reg_moderador.id_moderador
+        user_sesion.email= reg_moderador.email
+        user_sesion.role=""
+        user_sesion.nombre = ROLE_MODERADOR
+
+    #VERIFICAR ADMINISTRADOR 
+    pos = fn_busquedasecuencial(LOGICO_ARCHIVO_ADMINISTRADORES,FISICO_ARCHIVO_ADMINISTRADORES,"email",email)
+    #Si no lo encuentra devuelve no verificado
+    if(pos == -1):
+        return verificado
+
+    LOGICO_ARCHIVO_ADMINISTRADORES.seek(pos,0)
+    reg_administrador:Administradores = pickle.load(LOGICO_ARCHIVO_ADMINISTRADORES)
+    if(reg_administrador.contrasena == contrasena):
+        verificado = True
+        user_sesion.id = reg_administrador.id_admin
+        user_sesion.email= reg_administrador.email
+        user_sesion.role=""
+        user_sesion.nombre = ROLE_ADMINISTRADOR 
+    
+    return verificado   
+
+def pr_iniciar_sesion():
+    intento = 0
+
+    pr_crear_titulo("Iniciar sesion")
+    email = input ("\nIngrese su correo electronico: ")
+    contrasena = input("\nIngrese su contraseña: ")
+    autenticado = pr_verificar_usuario(email,contrasena)
+    while (intento <= 3 and not (autenticado)) and email != "O" and contrasena != "O" :
+        pr_crear_titulo("Iniciar sesion")
+        print("\nSi ingresa [O] se le redigira a una nueva pestaña si usted olvido su contraseña")
+        print("\nEl email o la contraseña no fueron encontradas")
+        email = input ("\nIngrese nuevamente su email: ")
+        #if(email == "O"):
+            #FUNCION EN CONSTRUCCION
+           # pr_olvido_contrasena()
+
+        contrasena = input("\nIngrese su contraseña:  ")
+        if(contrasena == "O"):
+            #FUNCION EN CONSTRUCCION
+            pr_olvido_contrasena()
+
+        autenticado = pr_verificar_usuario(email,contrasena)
+        intento = intento + 1 
+
+    if(user_sesion.role == ROLE_USUARIO):
+        pr_menu_estudiantes()
+    elif(user_sesion.role == ROLE_MODERADOR):
+        pr_menu_moderador()
+    elif(user_sesion.role == ROLE_ADMINISTRADOR):
+        pr_menu_administrador()
+
+
+def pr_registrarse():
+    pr_crear_estudiantes()
+
+def pr_inicializar_programa():
+    opc = -1
+    while opc != 0:
+        pr_crear_titulo("⭐ BIENVENIDO ⭐ ")
+        print("\n1 - Loguearse\n \n2 - Registrarse\n \n0 - Salir\n\n\n")
+        opc = fn_validar_rango(0,2)
+        match opc:
+            case(1):
+                pr_iniciar_sesion()
+            case(2):
+                pr_registrarse()
+            case _:
+                print("Gracias por estar con nosotros finalizando programa...\n")
+                pr_pausar_consola()
 
 
 #--------------------------------------------------------------#
@@ -785,11 +1043,32 @@ if os.path.exists(CARPETA):
     LOGICO_ARCHIVO_LIKES = fn_crear_logico(FISICO_ARCHIVO_LIKES)
 
 # La lógica inicia acá
-""" pr_eliminar_perfil()
- """
+#pr_crear_estudiantes()
+#pr_ver_candidatos()
 
-
+#pr_crear_estudiantes()
+pr_inicializar_programa()
+#pr_iniciar_sesion()
 # Última línea
 fn_cerrar_logico()
 
+
+
+""" def fn_acortar(VAR):
+    B = ""
+    for i in range(0,len(VAR)):
+        if(A[i] != " "):
+            B = B + A[i]
+    return B 
+
+
+
+def fn_crear(A):
+    B = ""
+    i=0
+    while  A != B:
+        B = B + A[i]
+        i = i + 1 
+    return i
+ """
 
