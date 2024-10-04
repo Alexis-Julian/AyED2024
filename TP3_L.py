@@ -28,6 +28,9 @@ class Moderador:
         self.contrasena=""
         self.estado=bool
         self.nombre=""
+        self.reportes_ignorados=0
+        self.reportes_aceptados=0
+        self.reportes_totales=0
 
 class Administrador:
     def __init__(self):
@@ -63,14 +66,22 @@ INIT_ESTUDIANTES = [
     [5, "matias@ayed.com", "Matias", "M", "123", "Futbol", "Futuro ingeniero", "11/06/1999", True],
     [6, "micaela@ayed.com", "Micaela", "M", "123", "Futbol", "Futuro ingeniero", "11/06/1999", True],
     [7, "agustin@ayed.com", "Agustin", "M", "123", "Futbol", "Futuro ingeniero", "11/06/1999", True]]
-INIT_MODERADORES = [[0, "mod_lautaro@ayed.com", "123", True, "Lautaro"], [1, "mod_alexis@ayed.com", "123", True, "Alexis"]] 
+INIT_MODERADORES = [
+    [0, "mod_lautaro@ayed.com", "123", True, "Lautaro"], 
+    [1, "mod_alexis@ayed.com", "123", True, "Alexis"],
+    [2, "mod_nestor@ayed.com", "123", False, "Nestor"],
+    [3, "mod_leonel@ayed.com", "123", False, "Leonel"],] 
 
 INIT_REPORTES = [
     [0, 1, "Me molesta", 0],
     [3, 1, "No me paso la tarea", 0],
     [6, 0, "No me paso su instagram", 0],
     [7, 4, "Jorge trata mal a sus companeros", 0],
-    ]
+    [1, 5, "No quiere participar en el grupo", 0],
+    [2, 6, "Habla durante la clase", 0],
+    [4, 2, "Se rie en momentos inapropiados", 0],
+    [5, 3, "Siempre llega tarde a las reuniones", 0]
+]
 
 #--------------------------------------------------------------#
 #                                                              #
@@ -80,6 +91,7 @@ INIT_REPORTES = [
 
 MAX_INTENTOS = 3
 INTENTO_LOGIN = 0
+MAIL_LOGEADO = ""
 TIPO_LOGEADO = ""
 REG_LOGEADO: io.BufferedRandom
 POS_LOGEADA = -1
@@ -147,6 +159,9 @@ def lj_moderadores(x:Moderador):
     x.contrasena = str(x.contrasena).ljust(32).lower()
     x.estado = str(x.estado).ljust(10).lower() #Booleano
     x.nombre = str(x.nombre).ljust(32)
+    x.reportes_aceptados = str(x.reportes_aceptados).ljust(10).lower()
+    x.reportes_totales = str(x.reportes_totales).ljust(10).lower()
+    x.reportes_ignorados = str(x.reportes_ignorados).ljust(10).lower()
 
 def lj_administradores(x:Administrador):
     x.id_admin = str(x.id_admin).ljust(10).lower() #Entero
@@ -292,6 +307,7 @@ def fn_busqueda_secuencial(
     return encontrado
 
 def fn_validar_usuario(archivo_logico: io.BufferedRandom, archivo_fisico: str, email: str, password: str):
+    global MAIL_LOGEADO
     tam_registro = os.path.getsize(archivo_fisico)
     
     archivo_logico.seek(0)
@@ -311,12 +327,15 @@ def fn_validar_usuario(archivo_logico: io.BufferedRandom, archivo_fisico: str, e
                 
                 if estado_normalizado == "true":
                     encontrado = posicion_actual
+                    MAIL_LOGEADO = email_encontrado
             else:
                 encontrado = posicion_actual
+                MAIL_LOGEADO = email_encontrado
+                
                     
     return encontrado
 
-def fn_busqueda_secu(archivo_logico: io.BufferedRandom, archivo_fisico: str, nombre: str, id: int, email: str):
+def fn_busqueda_secu(archivo_logico: io.BufferedRandom, archivo_fisico: str, nombre: str, id: int, email: str = False):
     tam_archivo = os.path.getsize(archivo_fisico)
     archivo_logico.seek(0)
     
@@ -339,8 +358,7 @@ def fn_busqueda_secu(archivo_logico: io.BufferedRandom, archivo_fisico: str, nom
             encontrado = posicion_actual
     
     return encontrado
-        
-    
+         
 #--------------------------------------------------------------#
 #                                                              #
 #               PROCEDURES/FUNCIONES AUXILIARES                #
@@ -434,6 +452,7 @@ def pr_crear_titulo(titulo:str):
     print(columnas)
     print("\n" + " " * copiarColumnas + titulo )
     print(columnas)
+
 #--------------------------------------------------------------#
 #                                                              #
 #                PRECARGA DE DATOS                             #
@@ -645,12 +664,24 @@ def fn_desactivar_usu_reportado(id:int):
     fn_guardar_datos(estudiante, LOGICO_ARCHIVO_ESTUDIANTES, FISICO_ARCHIVO_ESTUDIANTES, lj_estudiantes, pos_encontrado)
       
 def fn_ver_reportes():
-    cant_reportes = fn_buscar_cantidad_de_registros(LOGICO_ARCHIVO_REPORTES, FISICO_ARCHIVO_REPORTES)
+    cant_reportes = 0
     tam_reportes = os.path.getsize(FISICO_ARCHIVO_REPORTES)
     
     contador = 1
     
+    LOGICO_ARCHIVO_REPORTES.seek(0)
+    
     while LOGICO_ARCHIVO_REPORTES.tell() < tam_reportes:
+        reporte:Reporte = pickle.load(LOGICO_ARCHIVO_REPORTES)
+        
+        estado_formateado = reporte.estado.strip()
+        
+        if estado_formateado == "0":
+            cant_reportes+=1
+    
+    LOGICO_ARCHIVO_REPORTES.seek(0)
+    
+    while LOGICO_ARCHIVO_REPORTES.tell() < tam_reportes and contador != -1:
         pr_limpiar_consola()
         pr_crear_titulo(f"Reporte {contador}/{cant_reportes}")
         
@@ -661,15 +692,26 @@ def fn_ver_reportes():
         id_reportante = registro_reporte.id_reportante.strip()
         id_reportado = registro_reporte.id_reportado.strip()
               
+        #REPORTANTE
         reportante_pos = fn_busqueda_secu(LOGICO_ARCHIVO_ESTUDIANTES, FISICO_ARCHIVO_ESTUDIANTES, "", int(id_reportante))
         LOGICO_ARCHIVO_ESTUDIANTES.seek(reportante_pos)
         reportante:Estudiante = pickle.load(LOGICO_ARCHIVO_ESTUDIANTES)
         reportante_estado = reportante.estado.strip()
         
+        #REPORTADO
         reportado_pos = fn_busqueda_secu(LOGICO_ARCHIVO_ESTUDIANTES, FISICO_ARCHIVO_ESTUDIANTES, "", int(id_reportado))
         LOGICO_ARCHIVO_ESTUDIANTES.seek(reportado_pos)
         reportado:Estudiante = pickle.load(LOGICO_ARCHIVO_ESTUDIANTES)
         reportado_estado = reportado.estado.strip()
+        
+        #MODERADOR
+        mod_pos = fn_busqueda_secu(LOGICO_ARCHIVO_MODERADORES, FISICO_ARCHIVO_MODERADORES, "", "", MAIL_LOGEADO)
+        LOGICO_ARCHIVO_MODERADORES.seek(mod_pos)
+        moderador:Moderador = pickle.load(LOGICO_ARCHIVO_MODERADORES)
+        
+        reportes_totales_formateado = int(moderador.reportes_totales.strip())
+        reportes_aceptados_formateado = int(moderador.reportes_aceptados.strip())
+        reportes_ignorados_formateado = int(moderador.reportes_ignorados.strip())
         
         if reportado_estado == "True" and reportante_estado == "True":
             if registro_reporte.estado.strip() == "0":
@@ -678,25 +720,37 @@ def fn_ver_reportes():
                 print(f"MOTIVO: {registro_reporte.razon_reporte.strip()}")
                 print(f"ESTADO: {registro_reporte.estado.strip()}")                
                 print("\nIngrese una accion: ")
-                print("\na-Ignorar reporte\n\nb-Bloquear al reportado\n\n")
-                opc = fn_validar_rango_str("a", "b")
+                print("\na-Ignorar reporte\n\nb-Bloquear al reportado\n\nc-Salir\n\n")
+                opc = fn_validar_rango_str("a", "c")
                 
                 match opc:
                     case 'a':
                         registro_reporte.estado = 2
                         fn_guardar_datos(registro_reporte, LOGICO_ARCHIVO_REPORTES, FISICO_ARCHIVO_REPORTES, lj_reportes, posicion_actual)
+                        moderador.reportes_totales = reportes_totales_formateado + 1
+                        moderador.reportes_ignorados = reportes_ignorados_formateado + 1
+                        fn_guardar_datos(moderador, LOGICO_ARCHIVO_MODERADORES, FISICO_ARCHIVO_MODERADORES, lj_moderadores, mod_pos)\
+                        
+                        contador +=1
+                        
                     case 'b':
                         registro_reporte.estado = 1
                         fn_desactivar_usu_reportado(int(id_reportado))
                         fn_guardar_datos(registro_reporte, LOGICO_ARCHIVO_REPORTES, FISICO_ARCHIVO_REPORTES, lj_reportes, posicion_actual)
+                        moderador.reportes_totales = reportes_totales_formateado + 1
+                        moderador.reportes_aceptados = reportes_aceptados_formateado + 1
+                        fn_guardar_datos(moderador, LOGICO_ARCHIVO_MODERADORES, FISICO_ARCHIVO_MODERADORES, lj_moderadores, mod_pos)
                         pr_limpiar_consola()
                         pr_crear_titulo(f"Usuario {reportado.email} bloqueado con exito")
                         
                         print("\na-Continuar\n")
                         opc = fn_validar_rango_str("a", "a")
                         
-                contador +=1
-    
+                        contador +=1
+                        
+                    case 'c':
+                        contador = -1
+
     return contador
 
 def fn_gestionar_reportes():
@@ -836,6 +890,86 @@ def fn_eliminar_usuario():
     
     return desactivado
 
+def fn_dar_de_alta_mod():
+    cant_moderadores = fn_buscar_cantidad_de_registros(LOGICO_ARCHIVO_MODERADORES, FISICO_ARCHIVO_MODERADORES)
+    tam_reg = os.path.getsize(FISICO_ARCHIVO_MODERADORES)
+    
+    activado = False
+    
+    def fn_mostrar_moderadores():
+        columnas = [""]*3
+        def pr_cargar_columnas():
+            columnas[0] = "UID"
+            columnas[1] = "EMAIL"
+            columnas[2] = "ESTADO"
+        
+        personas = [[""]*3 for _ in range (cant_moderadores)]
+        pr_cargar_columnas()
+        
+        LOGICO_ARCHIVO_MODERADORES.seek(0)
+        
+        contador = 0
+        
+        while LOGICO_ARCHIVO_MODERADORES.tell() < tam_reg:
+            reg: Moderador = pickle.load(LOGICO_ARCHIVO_MODERADORES)
+            
+            estado_formateado = reg.estado.strip()
+            
+            if estado_formateado == "false":
+                personas[contador][0] = reg.id_moderador
+                personas[contador][1] = reg.email
+                personas[contador][2] = reg.estado
+                
+                contador +=1
+        
+        if contador != 0:
+            pr_tabla(columnas, personas)
+        
+        return contador
+    
+    while not activado:
+        if fn_mostrar_moderadores() == 0:
+            pr_crear_titulo("Todos los moderadores estan activados")
+            print("\nb-Volver\n\n")
+        
+            opc = fn_validar_rango_str('b', 'b')
+
+            match opc:
+                case 'b':
+                    activado = True
+                    return activado
+        
+        opc = input("Ingrese email de moderador a activar: ")
+        
+        pos_moderador = fn_busqueda_secu(LOGICO_ARCHIVO_MODERADORES, FISICO_ARCHIVO_MODERADORES, "", "", opc)
+        
+        while pos_moderador == -1:
+            print("No se encontro moderador asociado a ese email.")
+            opc = input("Ingrese email de usuario a eliminar: ")
+            pos_moderador = fn_busqueda_secu(LOGICO_ARCHIVO_MODERADORES, FISICO_ARCHIVO_MODERADORES, "", "", opc)
+        
+        LOGICO_ARCHIVO_MODERADORES.seek(pos_moderador)
+        
+        moderador:Moderador = pickle.load(LOGICO_ARCHIVO_MODERADORES)
+        moderador.estado = True
+        fn_guardar_datos(moderador, LOGICO_ARCHIVO_MODERADORES, FISICO_ARCHIVO_MODERADORES, lj_moderadores, pos_moderador)
+        
+        activado = True       
+    
+    if activado:
+        print("Moderador activado con exito.")
+        print("\na-Activar otro moderador\n\nb-Volver\n\n")
+        
+        opc = fn_validar_rango_str('a', 'b')
+        
+        match opc:
+            case 'a':
+                fn_dar_de_alta_mod()
+            case 'b':
+                return activado
+    
+    return activado
+
 def fn_gestionar_usuarios_admin():
     band = False
     while not band:
@@ -848,9 +982,9 @@ def fn_gestionar_usuarios_admin():
             case 'a':
                 fn_eliminar_usuario()
             case 'b':
-                band = True
+                fn_dar_de_alta_mod()
             case 'c':
-                band = True
+                band = False
             case 'd':
                 band = True
     return band
@@ -865,7 +999,89 @@ def fn_gestionar_reportes_admin():
 #Reportes estadisticos
 #-----------#
 def fn_reportes_estadisticos():
-    return True
+    pr_limpiar_consola()
+    pr_crear_titulo("REPORTES ESTADISTICOS")
+    
+    cant_reportes = fn_buscar_cantidad_de_registros(LOGICO_ARCHIVO_REPORTES, FISICO_ARCHIVO_REPORTES)
+    cant_reportes_ignorados = 0
+    cant_reportes_aceptados = 0
+    
+    tam_reg_reportes = os.path.getsize(FISICO_ARCHIVO_REPORTES)
+    tam_reg_mod = os.path.getsize(FISICO_ARCHIVO_MODERADORES)
+    
+    cant_vistos = 0
+    cant_aceptados = 0
+    cant_ignorados = 0
+    
+    global mod_mas_vistos
+    global mod_mas_aceptados
+    global mod_mas_ignorados
+    
+    LOGICO_ARCHIVO_REPORTES.seek(0)
+    
+    while LOGICO_ARCHIVO_REPORTES.tell() < tam_reg_reportes:
+        reg:Reporte = pickle.load(LOGICO_ARCHIVO_REPORTES)
+        
+        estado_formateado = reg.estado.strip()
+        
+        if estado_formateado == '1':
+            cant_reportes_aceptados+=1
+        
+        if estado_formateado == '2':
+            cant_reportes_ignorados+=1
+    
+    
+    if cant_reportes_ignorados == 0 and cant_reportes_aceptados == 0:
+        print("\nAun no se han revisado reportes")
+        print("\nb-Volver\n")
+        
+        opc = fn_validar_rango_str("b", "b")
+        
+        if opc == 'b':
+            return True
+        
+    porc_aceptados = f"{(cant_reportes_aceptados * 100) / cant_reportes} %"
+    porc_ignorados = f"{(cant_reportes_ignorados * 100) / cant_reportes} %"
+    
+    LOGICO_ARCHIVO_MODERADORES.seek(0)
+    
+    while LOGICO_ARCHIVO_MODERADORES.tell() < tam_reg_mod:
+        moderador:Moderador = pickle.load(LOGICO_ARCHIVO_MODERADORES)
+        
+        cant_t = int(moderador.reportes_totales.strip())
+        cant_a = int(moderador.reportes_aceptados.strip())
+        cant_i = int(moderador.reportes_ignorados.strip())
+
+        email = moderador.email.strip()
+        
+        if cant_a > cant_aceptados:
+            cant_aceptados = cant_a
+            mod_mas_aceptados = email
+        
+        if cant_t > cant_vistos:
+            cant_vistos = cant_t
+            mod_mas_vistos = email
+        
+        if cant_i > cant_ignorados:
+            cant_ignorados = cant_i
+            mod_mas_ignorados = email
+    
+    print(f"Reportes totales: {cant_reportes}")
+    print(f"Reportes aceptados: {porc_aceptados}")
+    print(f"Reportes ignorados: {porc_ignorados}")
+    print(f"Moderador con mas reportes vistos: {mod_mas_vistos}({cant_vistos})")
+    
+    if cant_ignorados > 0:
+        print(f"Moderador con mas reportes ignorados: {mod_mas_ignorados}({cant_ignorados})")
+        
+    if cant_aceptados > 0:
+        print(f"Moderador con mas reportes aceptados: {mod_mas_aceptados}({cant_aceptados})")
+    
+    print("\nb-Volver\n")
+    opc = fn_validar_rango_str("b", "b")
+    
+    if opc == 'b':
+        return True
 
 def fn_menu_admin():
     band= True
@@ -927,11 +1143,11 @@ def inicializar():
     
     print("\nSaliendo del programa.\n")
 
-# inicializar()
+inicializar()
 
-def debugger():
-    pr_precarga_de_reportes()
-    pr_precarga_de_registros()
-    fn_eliminar_usuario()
+# def debugger():
+#     pr_precarga_de_reportes()
+#     pr_precarga_de_registros()
+#     fn_reportes_estadisticos()
     
-debugger()
+# debugger()
