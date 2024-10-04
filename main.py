@@ -55,7 +55,7 @@ class Estudiantes:
 
 class Usuario:
     def __init__(self):
-        self.id = 1
+        self.id = 11
         self.email = ""
         self.nombre= ""
         self.role = ""
@@ -210,10 +210,10 @@ def fn_validar_si_no():
 "var: numero, inicio, limite = tipo interger"
 def fn_validar_rango(inicio: int, limite: int):
     try:
-        numero =int(input("Ingrese una opción: "))
+        numero =int(input(f"Ingrese una opción [{inicio}-{limite}]: "))
         while (numero < inicio) or (numero > limite):
             print("\nError, ingrese nuevamente el número\n")
-            numero =int(input("Ingrese una opción: "))
+            numero =int(input(f"Ingrese una opción [{inicio}-{limite}]: "))
         return numero
     except ValueError:
         print("\nError: Solamente se permiten numeros\n")
@@ -339,7 +339,7 @@ def fn_busquedasecuencial(archivo_logico: io.BufferedRandom, archivo_fisico: str
 def verificar_like(id_remitente,id_destinatario):
     ""
 
-def verificar_match(id_remitente,id_destinatario):
+def verificar_match(reg):
     ""
 
 
@@ -614,11 +614,14 @@ def fn_obtener_registros_en_array(ar_logico,ar_fisico,normalizador):
 
 
 
-def fn_cuadricular_estudiantes(estudiantes:list[Estudiantes]):
+def fn_cuadricular_estudiantes(estudiantes:list[Estudiantes],mostrar_id=False):
     descontar = 0
+    longitud = 5
+
+    if(mostrar_id):
+        longitud = 6
     cantidad_registros = fn_buscar_cantidad_de_registros(LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES)
-    estudiante_vista = [["" for _ in range(0,5)] for _ in range(0,cantidad_registros)]
-    
+    estudiante_vista = [["" for _ in range(0,longitud)] for _ in range(0,cantidad_registros)]
 
     for k in range(0,cantidad_registros):
 
@@ -648,18 +651,94 @@ def fn_cuadricular_estudiantes(estudiantes:list[Estudiantes]):
                 estudiante_vista[k][4]=fn_diferencia_fechas(ultima_conexion,datetime.now())
             else:
                 estudiante_vista[k][4]="Sin datos"
+
+            if(mostrar_id):
+                estudiante_vista[k][5]=str(int(estudiantes[k].id_estudiantes) + 1) 
+
         else:
             descontar = descontar + 1
     
     #* EN ESTE BLOQUE SE LIMPIAN LOS ESTUDIANTES QUE NO CUMPLEN CON EL PROGRAMA LOS DADOS DE BAJA Y SI MISMO 
-    estudiante_limpio = [["" for _ in range(0,5)] for _ in range(0,cantidad_registros-descontar)]
+    estudiante_limpio = [["" for _ in range(0,longitud)] for _ in range(0,cantidad_registros-descontar)]
     for h in range(0,cantidad_registros):
-        for l in range(0,5):
+        for l in range(0,longitud):
             if(estudiante_vista[h][0] != ""):
                 estudiante_limpio[h][l]=estudiante_vista[h][l]
     
     return estudiante_limpio
 
+def fn_verificar_like(id_remit,id_desti):
+    "2"
+
+def fn_verificar_match(mi_likes:list[Likes]):
+     #BUSCAR MATCH ESTADOS 
+    all_likess:list[Likes] = fn_obtener_registros_en_array(LOGICO_ARCHIVO_LIKES,FISICO_ARCHIVO_LIKES,normalizar_likes)
+    match = 0
+    for k in range(0,len(mi_likes)):
+        for h in range(0,len(all_likess)):
+            if(mi_likes[k].destinatario == all_likess[h].remitente and mi_likes[k].remitente == all_likess[h].destinatario and mi_likes[k].remitente != all_likess[h].remitente):
+                match = match + 1        
+    return match
+    [[],[],[]]
+    #MATCH LIKES MIO , LIKE
+
+def fn_obtener_informacion_de_likes():
+
+    all_likess:list[Likes] = fn_obtener_registros_en_array(LOGICO_ARCHIVO_LIKES,FISICO_ARCHIVO_LIKES,normalizar_likes)
+    likes_remitentes:list[Likes] = []
+    likes_destinatario:list[Likes] = []
+    likes_matcheados:list[Likes] = []
+
+    for i in range(0,len(all_likess)):
+        if(str(all_likess[i].remitente) == str(user_sesion.id)):
+            likes_remitentes.append(all_likess[i])
+        elif(str(all_likess[i].destinatario) == str(user_sesion.id)):
+            likes_destinatario.append(all_likess[i])
+    
+    for k in range(0,len(likes_remitentes)):
+        for h in range(0,len(all_likess)):
+            if(likes_remitentes[k].destinatario == all_likess[h].remitente and likes_remitentes[k].remitente == all_likess[h].destinatario and likes_remitentes[k].remitente != all_likess[h].remitente):
+                likes_matcheados.append(likes_remitentes[k])  
+    
+    return [likes_matcheados,likes_destinatario,likes_remitentes]
+
+def fn_obtener_likes():
+    "Te devuelve los likes del usuario logeado"
+    cantidad = fn_buscar_cantidad_de_registros(LOGICO_ARCHIVO_LIKES,FISICO_ARCHIVO_LIKES)
+    registros = [None]* cantidad
+    registro2 = [None]* cantidad
+
+
+
+    descontar = 0
+    t = os.path.getsize(FISICO_ARCHIVO_LIKES)
+    LOGICO_ARCHIVO_LIKES.seek(0)
+    index = 0
+    while LOGICO_ARCHIVO_LIKES.tell() < t:
+        reg_like:Likes = pickle.load(LOGICO_ARCHIVO_LIKES)
+        normalizar_likes(reg_like) 
+        if(str(reg_like.remitente) == str(user_sesion.id)):
+            registros[index] = reg_like 
+        elif(str(reg_like.destinatario) == str(user_sesion.id)):
+            registro2[index] = reg_like 
+        else:
+            descontar = descontar + 1            
+        index= index + 1  
+    
+    likes_mio = [None] * (index-descontar-1)
+    k=0
+    e=0
+    while k < descontar:
+        if(registros[k]!= None):
+            likes_mio[e]=registros[k]
+            e=e+1
+        k = k + 1  
+    return likes_mio
+
+
+
+
+        
 
 def pr_ver_candidatos():
     estudiantes = fn_obtener_registros_en_array(LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES,normalizar_estudiante)
@@ -988,9 +1067,40 @@ def pr_gestionar_perfil():
                 ""
 
 def pr_reportar_candidatos():
-    ""
-    input("")
+    pr_crear_titulo("Reportar Candidato")
 
+    estudiantes = fn_obtener_registros_en_array(LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES,normalizar_estudiante)
+    estudiante_vista = fn_cuadricular_estudiantes(estudiantes,True)
+    estudiantes_columnas= ["Nombre","F.Nacimiento","Biografia","Hobbies","Ult.Conexion","ID"]
+    print("")
+
+    pr_tabla(estudiantes_columnas,estudiante_vista,False)
+    
+    print("\nIngrese el id del reportante [0-Salir]\n")
+    id = fn_validar_rango(0,fn_buscar_cantidad_de_registros(LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES))
+    while fn_busquedasecuencial(LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES,"id_estudiantes",id - 1) != -1 and id == 0:
+        id = fn_validar_rango(0,fn_buscar_cantidad_de_registros(LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES))
+
+    if(id == 0):
+        return
+
+    motivo =input("\nIngrese el motivo del reporte: ")
+    
+    print("\n¿Esta seguro de mandar el reporte?\n")
+    si_no = fn_validar_si_no()
+    if(si_no == "si"):
+        reg_reporte = Reportes()
+        reg_reporte.id_reportante = user_sesion.id 
+        reg_reporte.id_reportado= (id - 1) 
+        reg_reporte.razon_reporte = motivo
+        fn_guardar_datos(reg_reporte,LOGICO_ARCHIVO_REPORTES,FISICO_ARCHIVO_REPORTES,formatear_reportes)
+        print("\nSu reporte ha sido enviado correctamente...\n")
+        pr_pausar_consola()
+
+    else:
+        pr_crear_titulo("Reportar Candidato")
+        print("Su reporte se ha eliminado volviendo al menu principal...")
+        pr_pausar_consola()
 def pr_gestionar_candidatos():
     opc = ""
     while opc != "c":
@@ -1005,6 +1115,8 @@ def pr_gestionar_candidatos():
             case _:
                 ""
 
+def pr_reporte_estadisticos():
+    ""
 
 def pr_menu_estudiantes():
     opc = -1
@@ -1018,7 +1130,8 @@ def pr_menu_estudiantes():
             case 2:
                 pr_gestionar_candidatos()
             case 3:
-                pr_matcheos()
+               pr_cartel_construccion()
+               
             case 4:
                 pr_reporte_estadisticos()
             case _:
@@ -1202,13 +1315,9 @@ if os.path.exists(CARPETA):
     LOGICO_ARCHIVO_LIKES = fn_crear_logico(FISICO_ARCHIVO_LIKES)
 
 # La lógica inicia acá
-#pr_crear_estudiantes()
-#pr_ver_candidatos()
 
+informacion_like = fn_obtener_informacion_de_likes()
 
-#pr_crear_estudiantes()
-#pr_inicializar_programa()
-#pr_iniciar_sesion()
 # Última línea
 fn_cerrar_logico()
 
