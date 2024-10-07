@@ -55,7 +55,7 @@ class Estudiantes:
 
 class Usuario:
     def __init__(self):
-        self.id = 11
+        self.id = 1
         self.email = ""
         self.nombre= ""
         self.role = ""
@@ -276,14 +276,14 @@ def fn_guardar_datos(registro: object, archivo_logico: io.BufferedRandom, archiv
 
 def fn_buscar_cantidad_de_registros(archivo_logico: io.BufferedRandom, archivo_fisico: str):
     cantidad = 0   
-    if os.path.getsize(archivo_fisico) != 0:
+    tam_arch = os.path.getsize(archivo_fisico) 
+    if tam_arch != 0:
         archivo_logico.seek(0)
         pickle.load(archivo_logico)
         longitud_reg = archivo_logico.tell()
-        tam_arch = os.path.getsize(archivo_fisico) 
         cantidad = tam_arch // longitud_reg
         archivo_logico.seek(0)
-    return cantidad
+    return cantidad  
 
 def fn_busquedadico(archivo_logico: io.BufferedRandom, archivo_fisico: str, campo: str, data: int):
     dato = int(str(data).strip())
@@ -621,10 +621,9 @@ def fn_cuadricular_estudiantes(estudiantes:list[Estudiantes],mostrar_id=False):
     if(mostrar_id):
         longitud = 6
     cantidad_registros = fn_buscar_cantidad_de_registros(LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES)
+
     estudiante_vista = [["" for _ in range(0,longitud)] for _ in range(0,cantidad_registros)]
-
     for k in range(0,cantidad_registros):
-
         if(estudiantes[k].estado != "B" and int(estudiantes[k].id_estudiantes) != int(user_sesion.id)):
 
             estudiante_vista[k][0]=estudiantes[k].nombre
@@ -659,31 +658,27 @@ def fn_cuadricular_estudiantes(estudiantes:list[Estudiantes],mostrar_id=False):
             descontar = descontar + 1
     
     #* EN ESTE BLOQUE SE LIMPIAN LOS ESTUDIANTES QUE NO CUMPLEN CON EL PROGRAMA LOS DADOS DE BAJA Y SI MISMO 
-    estudiante_limpio = [["" for _ in range(0,longitud)] for _ in range(0,cantidad_registros-descontar)]
-    for h in range(0,cantidad_registros):
-        for l in range(0,longitud):
-            if(estudiante_vista[h][0] != ""):
-                estudiante_limpio[h][l]=estudiante_vista[h][l]
+    #estudiante_limpio = [["" for _ in range(0,longitud)] for _ in range(0,cantidad_registros-descontar)]
+   
+    estudiante_limpio = []
+    for h in range(0,len(estudiante_vista)):
+        if(estudiante_vista[h][0] != ""):
+            estudiante_limpio.append(estudiante_vista[h])
     
     return estudiante_limpio
 
-def fn_verificar_like(id_remit,id_desti):
-    "2"
-
-def fn_verificar_match(mi_likes:list[Likes]):
-     #BUSCAR MATCH ESTADOS 
+def fn_verificar_like():
     all_likess:list[Likes] = fn_obtener_registros_en_array(LOGICO_ARCHIVO_LIKES,FISICO_ARCHIVO_LIKES,normalizar_likes)
-    match = 0
-    for k in range(0,len(mi_likes)):
-        for h in range(0,len(all_likess)):
-            if(mi_likes[k].destinatario == all_likess[h].remitente and mi_likes[k].remitente == all_likess[h].destinatario and mi_likes[k].remitente != all_likess[h].remitente):
-                match = match + 1        
-    return match
-    [[],[],[]]
-    #MATCH LIKES MIO , LIKE
+    mis_likes =[]
+    if(len(all_likess) != 0):
+        for i in range(len(all_likess)):
+            if(str(all_likess[i].remitente) == str(user_sesion.id)):
+                mis_likes.append(all_likess[i])
+    return mis_likes
 
 def fn_obtener_informacion_de_likes():
-
+    "[0]: Matcheados [1]:Likes recibidos y no respondidos [2]:Likes dados y no recibidos"
+    matchs = 0
     all_likess:list[Likes] = fn_obtener_registros_en_array(LOGICO_ARCHIVO_LIKES,FISICO_ARCHIVO_LIKES,normalizar_likes)
     likes_remitentes:list[Likes] = []
     likes_destinatario:list[Likes] = []
@@ -696,11 +691,12 @@ def fn_obtener_informacion_de_likes():
             likes_destinatario.append(all_likess[i])
     
     for k in range(0,len(likes_remitentes)):
-        for h in range(0,len(all_likess)):
-            if(likes_remitentes[k].destinatario == all_likess[h].remitente and likes_remitentes[k].remitente == all_likess[h].destinatario and likes_remitentes[k].remitente != all_likess[h].remitente):
-                likes_matcheados.append(likes_remitentes[k])  
+      for h in range(0,len(all_likess)):
+        if(likes_remitentes[k].destinatario == all_likess[h].remitente and likes_remitentes[k].remitente == all_likess[h].destinatario and likes_remitentes[k].remitente != all_likess[h].remitente):
+            likes_matcheados.append(likes_remitentes[k])    
+            matchs = matchs +1
     
-    return [likes_matcheados,likes_destinatario,likes_remitentes]
+    return [len(likes_matcheados),len(likes_destinatario)-matchs,len(likes_remitentes)-matchs]
 
 def fn_obtener_likes():
     "Te devuelve los likes del usuario logeado"
@@ -741,21 +737,41 @@ def fn_obtener_likes():
         
 
 def pr_ver_candidatos():
-    estudiantes = fn_obtener_registros_en_array(LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES,normalizar_estudiante)
+    def fn_insertar_likes(est:list[Estudiantes]):        
+        nuevo_array = [["" for _ in range(0,7)] for _ in range(0,len(est))]
+        likes:list[Likes]= fn_verificar_like()
 
+        for i in range(0,len(est)):
+            nuevo_array[i][0] = est[i][0]
+            nuevo_array[i][1] = est[i][1]
+            nuevo_array[i][2] = est[i][2]
+            nuevo_array[i][3] = est[i][3]
+            nuevo_array[i][4] = est[i][4]
+            nuevo_array[i][5] = est[i][5]
+            nuevo_array[i][6] = "Sin like"
+
+        for h in range(0,len(nuevo_array)):
+            for t in range(0,len(likes)):
+                if(int(nuevo_array[h][5])-1 == int(likes[t].destinatario)):
+                    nuevo_array[h][6] = "Like dado"
+        return nuevo_array
+
+    estudiantes = fn_obtener_registros_en_array(LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES,normalizar_estudiante)
     if(len(estudiantes) ==0):
         pr_crear_titulo("No existen candidatos")
         print("")
         return pr_pausar_consola() 
 
+    
+    estudiante_vista = fn_cuadricular_estudiantes(estudiantes,True)
+    estudiante_vista= fn_insertar_likes(estudiante_vista)
+    #print(estudiante_vista)
+    #likes = fn_obtener_registros_en_array(LOGICO_ARCHIVO_LIKES,FISICO_ARCHIVO_LIKES,normalizar_likes)
 
-    estudiante_vista = fn_cuadricular_estudiantes(estudiantes)
-    likes = fn_obtener_registros_en_array(LOGICO_ARCHIVO_LIKES,FISICO_ARCHIVO_LIKES,normalizar_likes)
+    #print(likes)
+    #input("")
 
-    print(likes)
-    input("")
-
-    estudiantes_columnas= ["Nombre","F.Nacimiento","Biografia","Hobbies","Ult.Conexion"]
+    estudiantes_columnas= ["Nombre","F.Nacimiento","Biografia","Hobbies","Ult.Conexion","ID","Like"]
     pr_crear_titulo("CANDIDATOS")
     print("")
     pr_tabla(estudiantes_columnas,estudiante_vista,False)
@@ -1116,7 +1132,11 @@ def pr_gestionar_candidatos():
                 ""
 
 def pr_reporte_estadisticos():
-    ""
+    reportes:list = fn_obtener_informacion_de_likes()
+    print("Matcheados sobre el % posible: ",reportes[0])
+    print("Likes dados y no recibidos: ",reportes[2])
+    print("Likes recibidos y no respondidos: ",reportes[1])
+    input("")
 
 def pr_menu_estudiantes():
     opc = -1
@@ -1316,28 +1336,10 @@ if os.path.exists(CARPETA):
 
 # La lógica inicia acá
 
-informacion_like = fn_obtener_informacion_de_likes()
-
+pr_inicializar_programa()
+#pr_ver_candidatos()
 # Última línea
 fn_cerrar_logico()
 
 
-
-""" def fn_acortar(VAR):
-    B = ""
-    for i in range(0,len(VAR)):
-        if(A[i] != " "):
-            B = B + A[i]
-    return B 
-
-
-
-def fn_crear(A):
-    B = ""
-    i=0
-    while  A != B:
-        B = B + A[i]
-        i = i + 1 
-    return i
- """
 
