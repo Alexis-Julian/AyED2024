@@ -267,6 +267,7 @@ def pr_verificar_usuario(email:str,contrasena:str) -> bool:
             user_sesion.nombre = reg_user.nombre
             user_sesion.email = reg_user.email
             user_sesion.role= ROLE_USUARIO
+            user_sesion.estado = True
         return verificado 
         
 
@@ -1187,18 +1188,18 @@ def pr_crear_estudiantes():
                 pr_tabla(columnas,estudiante_ram)                
 
                 contraseña =""
-                while len(contraseña) < 8 and contraseña != "S":
+                while len(contraseña) < 4 and contraseña != "S":
                     contraseña = input(f"[0]-{"Ver" if ver_contraseña else "Ocultar" } [S]-Volver || Ingrese su contraseña: ")
 
                     #SE LE VUELVE A PEDIR LA CONTRASEÑA AL USUARIO YA QUE NO CUMPLE CON LAS CONDICIONES
-                    if(len(contraseña) < 8 and contraseña != "0" and contraseña != "S" ):
+                    if(len(contraseña) < 4 and contraseña != "0" and contraseña != "S" ):
                         print("\nNecesita ingresar una contraseña mayor a 8 caracteres")
                         pr_pausar_consola()
                         pr_tabla(columnas,estudiante_ram)
 
                     
                     #SI INGRESA UNA CONTRASEÑA MAYOR A LA LONGITUD REQUERIDA
-                    if(len(contraseña) >=8):
+                    if(len(contraseña) >= 4):
                         estudiante.contrasena = contraseña
                         estudiante_ram[0][1] = estudiante.contrasena
                         pr_tabla(columnas,estudiante_ram)
@@ -1227,17 +1228,15 @@ def pr_crear_estudiantes():
             case(5):
                 if fn_verificar_array_vacio(estudiante_ram[0],3):
                     pr_tabla(columnas,estudiante_ram)
-                    print(f"\n\n¿Desea guardar su datos {nombre}? Los datos ha guardarse son los indicados arriba 🔼")
+                    print(f"\n\n¿Desea guardar su datos? Los datos ha guardarse son los indicados arriba 🔼")
                     si_no = fn_validar_si_no()
                     if(si_no == "si"):
                         #AGREGAR UNA CANCELACION POR SI SE ARREPIENTE DE CREAR LA CUENTA
-                        clave = input("Por seguridad de su cuenta ingrese una clave unica: ")
                         estudiante.email = email
                         estudiante.nombre = nombre
                         estudiante.sexo= sexo
                         estudiante.id_estudiantes= fn_buscar_cantidad_de_registros(LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES)
                         estudiante.ultima_conexion= datetime.now()
-                        estudiante.clave_recuperacion = clave
                         fn_guardar_datos(estudiante,LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES,formatear_estudiantes)
                     else:
                         opc =-1
@@ -1250,10 +1249,12 @@ def pr_crear_estudiantes():
         pr_tabla(columnas,estudiante_ram)
 
 def pr_eliminar_perfil():
+    pr_limpiar_consola()
     #VAMOOS A MOSTRAR UNA CUADRILLA CON EL PERFIL
     pr_crear_titulo("Eliminar perfil")
     print("\nDesea eliminar su perfil?\n ")
     si_no = fn_validar_si_no()
+
     if(si_no =="si"):
         print("\nSe le presentara un captcha en la pantalla porfavor ingrese las letras que corresponden\n")
         pr_pausar_consola()
@@ -1420,6 +1421,7 @@ def pr_gestionar_perfil():
     opc = ""
 
     while opc != "c" and user_sesion.estado:
+        pr_limpiar_consola()  
         pr_crear_titulo("Gestionar mi perfil")
         print("\na. Editar mi datos personales\n \nb. Eliminar mi perfil\n \nc. Volver\n")
         opc = fn_validar_rango_str("a","c")
@@ -1469,6 +1471,7 @@ def pr_reportar_candidatos():
 def pr_gestionar_candidatos():
     opc = ""
     while opc != "c":
+        pr_limpiar_consola()  
         pr_crear_titulo("Gestionar Candidatos")
         print("\na. Ver candidatos\n \nb. Reportar candidatos\n \nc. Volver\n")
         opc = fn_validar_rango_str("a","c")
@@ -1481,15 +1484,21 @@ def pr_gestionar_candidatos():
                 ""
 
 def pr_reporte_estadisticos():
+    pr_limpiar_consola()  
+    pr_crear_titulo('REPORTES ESTADISTICOS')
     reportes:list = fn_obtener_informacion_de_likes()
     print("Matcheados sobre el % posible: ",reportes[0])
     print("Likes dados y no recibidos: ",reportes[2])
     print("Likes recibidos y no respondidos: ",reportes[1])
-    input("")
+    
+    input("c-Salir")
+        
 
 def pr_menu_estudiantes():
     opc = -1
-    while opc != 0 and user_sesion.estado:          
+    
+    while opc != 0 and user_sesion.estado:
+        pr_limpiar_consola()         
         pr_crear_titulo("Menu principal")
         print("\n1. Gestionar mi perfil\n \n2. Gestionar candidatos\n \n3. Matcheos\n \n4. Reportes estadísticos\n \n0. Salir\n")
         opc = fn_validar_rango(0, 4)
@@ -2060,7 +2069,8 @@ def fn_menu_admin():
 #                                                              #
 #--------------------------------------------------------------#
 def pr_iniciar_sesion():
-    intento = 0
+    pr_limpiar_consola()
+    intento = 1
     
     pr_precarga_de_reportes()
     pr_precarga_de_registros()
@@ -2069,18 +2079,19 @@ def pr_iniciar_sesion():
     email = input ("\nIngrese su correo electronico: ")
     contrasena = input("\nIngrese su contraseña: ")
     autenticado = pr_verificar_usuario(email,contrasena)
-    while (intento <= 3 and not (autenticado)) and email != "O" and contrasena != "O" :
+    while (intento < 3 and not (autenticado)):
+        pr_limpiar_consola()
         pr_crear_titulo("Iniciar sesion")
-        print("\nSi ingresa [O] se le redigira a una nueva pestaña si usted olvido su contraseña")
-        print("\nEl email o la contraseña no fueron encontradas")
+
+        print(f"\nEl email o la contraseña no fueron encontradas. Ingresos restantes: {3 - intento}")
         email = input ("\nIngrese nuevamente su email: ")
 
         contrasena = input("\nIngrese su contraseña:  ")
 
         autenticado = pr_verificar_usuario(email,contrasena)
+        
         intento = intento + 1 
-    print(user_sesion.role)
-    input("")
+    
     if(user_sesion.role == ROLE_USUARIO):
         pr_menu_estudiantes()
     elif(user_sesion.role == ROLE_MODERADOR):
@@ -2088,13 +2099,15 @@ def pr_iniciar_sesion():
     elif(user_sesion.role == ROLE_ADMINISTRADOR):
         fn_menu_admin()
 
-
 def pr_registrarse():
     pr_crear_estudiantes()
 
 def pr_inicializar_programa():
+    pr_precarga_de_registros()
+    
     opc = -1
     while opc != 0:
+        pr_limpiar_consola()
         pr_crear_titulo("⭐ BIENVENIDO ⭐ ")
         print("\n1 - Loguearse\n \n2 - Registrarse\n \n0 - Salir\n\n\n")
         opc = fn_validar_rango(0,2)
