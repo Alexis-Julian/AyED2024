@@ -55,7 +55,7 @@ class Estudiantes:
 
 class Usuario:
     def __init__(self):
-        self.id = 1
+        self.id = 4
         self.email = ""
         self.nombre= ""
         self.role = ""
@@ -78,6 +78,7 @@ class Likes:
     def __init__(self):
         self.remitente=0
         self.destinatario=0
+        self.estado = False
 
 class Reportes:
     def __init__(self):
@@ -192,6 +193,7 @@ def normalizar_estudiante(x:Estudiantes):
 def normalizar_likes(x:Likes):
     x.destinatario=str(x.destinatario).strip()
     x.remitente=str(x.remitente).strip()
+
 
 #--------------------------------------------------------------#
 #                                                              #
@@ -312,6 +314,27 @@ def fn_busquedadico(archivo_logico: io.BufferedRandom, archivo_fisico: str, camp
         return medio * tamregi
 
     return -1
+
+
+def fn_busquedasecuencial_like(data:int | str):
+    tam_archivo = os.path.getsize(FISICO_ARCHIVO_LIKES)
+    LOGICO_ARCHIVO_LIKES.seek(0)
+    encontrado = False
+    pos = -1
+
+    while LOGICO_ARCHIVO_LIKES.tell() < tam_archivo and encontrado == False :
+        pos = LOGICO_ARCHIVO_LIKES.tell()
+        regtemporal:Likes = pickle.load(LOGICO_ARCHIVO_LIKES)
+        normalizar_likes(regtemporal)
+        if(regtemporal.destinatario == data  and regtemporal.remitente == str(user_sesion.id)) :
+            encontrado = True
+               
+
+    if(encontrado):
+        return pos
+    else:
+        return -1
+
 
 def fn_busquedasecuencial(archivo_logico: io.BufferedRandom, archivo_fisico: str, campo:str,data:int | str):
     tam_archivo = os.path.getsize(archivo_fisico)
@@ -749,22 +772,39 @@ def fn_obtener_likes():
             descontar = descontar + 1            
         index= index + 1  
     
-    likes_mio = [None] * (index-descontar-1)
-    k=0
-    e=0
-    while k < descontar:
-        if(registros[k]!= None):
-            likes_mio[e]=registros[k]
-            e=e+1
-        k = k + 1  
-    return likes_mio
+    
+    registros = fn_formatear_array(registros)
+    registro2 = fn_formatear_array(registro2)
+    
+    return registros
 
 
 
+    
+def fn_verificar_si_existe_like(id_destinatario):
+    reg_likes:list[Likes] = fn_obtener_likes()
+    indice = -1
+    for i in range(0,len(reg_likes)):
+        if(reg_likes[i].destinatario == id_destinatario):
+            #SI ESTO EXISTE SE VERA VERIFICAR QUE EL USUARIO DECIDA CAMBIAR A ESTADO DESCATIVADO
+            indice = i
+    
+    if(indice == -1):
+        return []
 
-        
+    else:
+        return [reg_likes[i]]
+    
+    
+
+
+
 
 def pr_ver_candidatos():
+    
+    
+    
+    
     def fn_insertar_likes(est:list[Estudiantes]):        
         nuevo_array = [["" for _ in range(0,7)] for _ in range(0,len(est))]
         likes:list[Likes]= fn_verificar_like()
@@ -780,7 +820,8 @@ def pr_ver_candidatos():
 
         for h in range(0,len(nuevo_array)):
             for t in range(0,len(likes)):
-                if(int(nuevo_array[h][5])-1 == int(likes[t].destinatario)):
+
+                if(int(nuevo_array[h][5])-1 == int(likes[t].destinatario) and likes[t].estado):
                     nuevo_array[h][6] = "Like dado"
         return nuevo_array
 
@@ -793,11 +834,7 @@ def pr_ver_candidatos():
     
     estudiante_vista = fn_cuadricular_estudiantes(estudiantes,True)
     estudiante_vista= fn_insertar_likes(estudiante_vista)
-    #print(estudiante_vista)
-    #likes = fn_obtener_registros_en_array(LOGICO_ARCHIVO_LIKES,FISICO_ARCHIVO_LIKES,normalizar_likes)
-
-    #print(likes)
-    #input("")
+    
 
     estudiantes_columnas= ["Nombre","F.Nacimiento","Biografia","Hobbies","Ult.Conexion","ID","Like"]
     pr_crear_titulo("CANDIDATOS")
@@ -814,9 +851,34 @@ def pr_ver_candidatos():
     if(nombre == "S" ):
         return    
 
+
+    #TIENE QUE HABER UNA VALIDACION DE LIKE 
+    #CON EL REGISTRO PODRIAMOS BUSCAR EL LIKE DEL LIKEADO 
+
+    borro = False
+    reg_likeado:Estudiantes = fn_traer_registro(LOGICO_ARCHIVO_ESTUDIANTES,pos,normalizar_estudiante)
+    like_repetido = fn_verificar_si_existe_like(reg_likeado.id_estudiantes)
+    if(len(like_repetido) > 0):
+        #ENCONTRO UN LIKE
+        if(like_repetido[0].estado):
+            print("Desea quitar su like?")
+        else:
+            print("Usted antes ya le habia dado like, desea volver activarlo? ")
+
+        si_no_like= fn_validar_si_no()
+        if(si_no_like == "si"):
+            pos = fn_busquedasecuencial_like(like_repetido[0].destinatario)
+            like_repetido[0].estado = not(like_repetido[0].estado) 
+            fn_guardar_datos(like_repetido[0],LOGICO_ARCHIVO_LIKES,FISICO_ARCHIVO_LIKES,formatear_likes,pos)
+            input("Su like se ha actualizado correctamente")
+            borro =not(borro)
+    
     pr_crear_titulo("CANDIDATOS")
     print("")
     pr_tabla(estudiantes_columnas,estudiante_vista,False)
+    
+    if(borro):
+        return ""
 
     print("\nSu like esta a punto de ser enviado esta seguro de esta accion? Si-[ACEPTAR] No-[CANCELAR] \n")
     si_no= fn_validar_si_no()
@@ -892,6 +954,8 @@ def pr_crear_estudiantes():
             case(3):
                 pr_tabla(columnas,estudiante_ram)
                 nombre = input("Ingrese su nombre: ")
+                while fn_busquedasecuencial(LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES,"nombre",nombre)  != -1 :
+                    nombre = input("Este nombre ya existe, ingrese uno nuevo:")
                 estudiante_ram[0][2] = nombre
             case(4):
                 pr_tabla(columnas,estudiante_ram)
@@ -1073,7 +1137,11 @@ def pr_editar_datos_personales():
         opc=input("Ingrese una opcion: ")
         match(opc):
             case("a"):
+
                 nombre = input("Ingrese su nombre: ")
+                while fn_busquedasecuencial(LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES,"nombre",nombre)  != -1 :
+                    nombre = input("Este nombre ya existe, ingrese uno nuevo:")
+                
                 datos_personales[0] = nombre
             case("b"):
                 sexo = input("Ingrese su sexo: ")
@@ -1365,20 +1433,10 @@ if os.path.exists(CARPETA):
 # La lógica inicia acá
 
 
-
-
-
-print(fn_obtener_informacion_de_likes())
-input("")
-
-
 pr_inicializar_programa()
-#pr_ver_candidatos()
-# Última línea
-
-
-
-
+#print(fn_verificar_si_existe_like(1))
+#pr_gestionar_perfil()
+#pr_gestionar_candidatos()
 
 
 fn_cerrar_logico()
