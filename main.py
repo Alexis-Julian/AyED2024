@@ -446,6 +446,28 @@ def obtener_letra_en_grande(letra, arte_ascii):
     return letra_en_grande
 
 
+def fn_formatear_array(nuevo) -> list:
+    descontar = 0
+
+    # Contar los valores que no son None
+    for i in range(len(nuevo)):
+        if nuevo[i] != None:
+            descontar += 1
+
+    # Crear un nuevo array del tamaño adecuado
+    nuevo_array = [None] * descontar
+    # Índice para el nuevo array
+    j = 0
+    # Llenar el nuevo array con los valores que no son None
+    for i in range(len(nuevo)):
+        if nuevo[i] != None:
+            nuevo_array[j] = nuevo[i]
+            j += 1
+
+    # Mostrar el nuevo array
+    return nuevo_array
+
+
 def draw_banner(characters, visible_up_to):
     # Obtener las dimensiones de la terminal
     def get_terminal_size():
@@ -680,23 +702,29 @@ def fn_obtener_informacion_de_likes():
     "[0]: Matcheados [1]:Likes recibidos y no respondidos [2]:Likes dados y no recibidos"
     matchs = 0
     all_likess:list[Likes] = fn_obtener_registros_en_array(LOGICO_ARCHIVO_LIKES,FISICO_ARCHIVO_LIKES,normalizar_likes)
-    likes_remitentes:list[Likes] = []
-    likes_destinatario:list[Likes] = []
-    likes_matcheados:list[Likes] = []
 
+    R:list[Likes] = [None]*len(all_likess)
+    D:list[Likes] = [None]*len(all_likess)
+    M:list[Likes] = [None]*len(all_likess)
+    
     for i in range(0,len(all_likess)):
         if(str(all_likess[i].remitente) == str(user_sesion.id)):
-            likes_remitentes.append(all_likess[i])
+            R[i] =  all_likess[i]
         elif(str(all_likess[i].destinatario) == str(user_sesion.id)):
-            likes_destinatario.append(all_likess[i])
+            D[i] = all_likess[i]
+
+    R=fn_formatear_array(R)
+    D=fn_formatear_array(D)
     
-    for k in range(0,len(likes_remitentes)):
+    for k in range(0,len(R)):
       for h in range(0,len(all_likess)):
-        if(likes_remitentes[k].destinatario == all_likess[h].remitente and likes_remitentes[k].remitente == all_likess[h].destinatario and likes_remitentes[k].remitente != all_likess[h].remitente):
-            likes_matcheados.append(likes_remitentes[k])    
+        if(R[k].destinatario == all_likess[h].remitente and R[k].remitente == all_likess[h].destinatario and R[k].remitente != all_likess[h].remitente):
+            M[k] = R[k]
             matchs = matchs +1
+
+    M=fn_formatear_array(M)
     
-    return [len(likes_matcheados),len(likes_destinatario)-matchs,len(likes_remitentes)-matchs]
+    return [len(M),len(D)-matchs,len(R)-matchs]
 
 def fn_obtener_likes():
     "Te devuelve los likes del usuario logeado"
@@ -1336,10 +1364,27 @@ if os.path.exists(CARPETA):
 
 # La lógica inicia acá
 
+
+
+
+
+print(fn_obtener_informacion_de_likes())
+input("")
+
+
 pr_inicializar_programa()
 #pr_ver_candidatos()
 # Última línea
+
+
+
+
+
+
 fn_cerrar_logico()
+
+
+
 
 
 
