@@ -254,53 +254,54 @@ def pr_verificar_usuario(email:str,contrasena:str) -> bool:
     #VERIFICAR USUARIOS 
     pos = fn_busquedasecuencial(LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES,"email",email)
     #Si no lo encuentra devuelve no verificado
-    if(pos == -1 ):
+    if(pos != -1 ):
+        #Logia de lectura de archivo
+        LOGICO_ARCHIVO_ESTUDIANTES.seek(pos,0)
+        reg_user = pickle.load(LOGICO_ARCHIVO_ESTUDIANTES)
+        normalizar_estudiante(reg_user)
+
+        #Si todo es correcto pone el verificado en verdadero 
+        if (reg_user.contrasena == contrasena and str(reg_user.estado).upper() != "B"):
+            verificado = True  
+            user_sesion.id = reg_user.id_estudiantes
+            user_sesion.nombre = reg_user.nombre
+            user_sesion.email = reg_user.email
+            user_sesion.role= ROLE_USUARIO
         return verificado 
-
-    #Logia de lectura de archivo
-    LOGICO_ARCHIVO_ESTUDIANTES.seek(pos,0)
-    reg_user = pickle.load(LOGICO_ARCHIVO_ESTUDIANTES)
-    normalizar_estudiante(reg_user)
-
-    #Si todo es correcto pone el verificado en verdadero 
-    if (reg_user.contrasena == contrasena and str(reg_user.estado).upper() != "B"):
-        verificado = True  
-        user_sesion.id = reg_user.id_estudiantes
-        user_sesion.nombre = reg_user.nombre
-        user_sesion.email = reg_user.email
-        user_sesion.role= ROLE_USUARIO
+        
 
     #VERIFICAR MODERADORES
     pos = fn_busquedasecuencial(LOGICO_ARCHIVO_MODERADORES,FISICO_ARCHIVO_MODERADORES,"email",email)
     #Si no lo encuentra devuelve no verificado
-    if(pos == -1 ):
-        return verificado 
-
-    #Logica de lectura de archivo   
-    LOGICO_ARCHIVO_MODERADORES.seek(pos,0)
-    reg_moderador:Moderador = pickle.load(LOGICO_ARCHIVO_MODERADORES)
     
-    if(reg_moderador.contrasena==contrasena):
-        verificado = True
-        user_sesion.id=reg_moderador.id_moderador
-        user_sesion.email= reg_moderador.email
-        user_sesion.role=""
-        user_sesion.nombre = ROLE_MODERADOR
+    if(pos != -1 ):
+        #Logica de lectura de archivo   
+        LOGICO_ARCHIVO_MODERADORES.seek(pos,0)
+        reg_moderador:Moderador = pickle.load(LOGICO_ARCHIVO_MODERADORES)
+        
+        if((reg_moderador.contrasena).strip() == contrasena):
+            verificado = True
+            user_sesion.id=reg_moderador.id_moderador
+            user_sesion.email= reg_moderador.email
+            user_sesion.role=ROLE_MODERADOR
+            user_sesion.nombre = ""
+            
+    
+        return verificado 
 
     #VERIFICAR ADMINISTRADOR 
     pos = fn_busquedasecuencial(LOGICO_ARCHIVO_ADMINISTRADORES,FISICO_ARCHIVO_ADMINISTRADORES,"email",email)
     #Si no lo encuentra devuelve no verificado
-    if(pos == -1):
-        return verificado
-
-    LOGICO_ARCHIVO_ADMINISTRADORES.seek(pos,0)
-    reg_administrador:Administrador = pickle.load(LOGICO_ARCHIVO_ADMINISTRADORES)
-    if(reg_administrador.contrasena == contrasena):
-        verificado = True
-        user_sesion.id = reg_administrador.id_admin
-        user_sesion.email= reg_administrador.email
-        user_sesion.role=""
-        user_sesion.nombre = ROLE_ADMINISTRADOR 
+    if(pos != -1):
+        LOGICO_ARCHIVO_ADMINISTRADORES.seek(pos,0)
+        reg_administrador:Administrador = pickle.load(LOGICO_ARCHIVO_ADMINISTRADORES)
+        if((reg_administrador.contrasena).strip() == contrasena):
+            verificado = True
+            user_sesion.id = reg_administrador.id_admin
+            user_sesion.email= reg_administrador.email
+            user_sesion.role=ROLE_ADMINISTRADOR 
+            user_sesion.nombre = ""
+            return verificado 
     
     return verificado 
 
@@ -2073,15 +2074,13 @@ def pr_iniciar_sesion():
         print("\nSi ingresa [O] se le redigira a una nueva pestaña si usted olvido su contraseña")
         print("\nEl email o la contraseña no fueron encontradas")
         email = input ("\nIngrese nuevamente su email: ")
-        #if(email == "O"):
-            #FUNCION EN CONSTRUCCION
-           # pr_olvido_contrasena()
 
         contrasena = input("\nIngrese su contraseña:  ")
 
         autenticado = pr_verificar_usuario(email,contrasena)
         intento = intento + 1 
-
+    print(user_sesion.role)
+    input("")
     if(user_sesion.role == ROLE_USUARIO):
         pr_menu_estudiantes()
     elif(user_sesion.role == ROLE_MODERADOR):
