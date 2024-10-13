@@ -261,7 +261,7 @@ def pr_verificar_usuario(email:str,contrasena:str) -> bool:
         normalizar_estudiante(reg_user)
 
         #Si todo es correcto pone el verificado en verdadero 
-        if (reg_user.contrasena == contrasena and str(reg_user.estado).upper() != "B"):
+        if (reg_user.contrasena == contrasena and reg_user.estado):
             verificado = True  
             user_sesion.id = reg_user.id_estudiantes
             user_sesion.nombre = reg_user.nombre
@@ -2060,7 +2060,8 @@ def fn_menu_admin():
 #                                                              #
 #--------------------------------------------------------------#
 def pr_iniciar_sesion():
-    intento = 0
+    pr_limpiar_consola()
+    intento = 1
     
     pr_precarga_de_reportes()
     pr_precarga_de_registros()
@@ -2069,7 +2070,7 @@ def pr_iniciar_sesion():
     email = input ("\nIngrese su correo electronico: ")
     contrasena = input("\nIngrese su contraseña: ")
     autenticado = pr_verificar_usuario(email,contrasena)
-    while (intento <= 3 and not (autenticado)) and email != "O" and contrasena != "O" :
+    while (intento < 3 and not (autenticado)) and email != "O" and contrasena != "O" :
         pr_crear_titulo("Iniciar sesion")
         print("\nSi ingresa [O] se le redigira a una nueva pestaña si usted olvido su contraseña")
         print("\nEl email o la contraseña no fueron encontradas")
@@ -2079,8 +2080,7 @@ def pr_iniciar_sesion():
 
         autenticado = pr_verificar_usuario(email,contrasena)
         intento = intento + 1 
-    print(user_sesion.role)
-    input("")
+    
     if(user_sesion.role == ROLE_USUARIO):
         pr_menu_estudiantes()
     elif(user_sesion.role == ROLE_MODERADOR):
@@ -2095,6 +2095,7 @@ def pr_registrarse():
 def pr_inicializar_programa():
     opc = -1
     while opc != 0:
+        pr_limpiar_consola()
         pr_crear_titulo("⭐ BIENVENIDO ⭐ ")
         print("\n1 - Loguearse\n \n2 - Registrarse\n \n0 - Salir\n\n\n")
         opc = fn_validar_rango(0,2)
