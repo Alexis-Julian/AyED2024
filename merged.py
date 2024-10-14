@@ -473,19 +473,18 @@ def fn_validar_usuario(archivo_logico: io.BufferedRandom, archivo_fisico: str, e
     
     while archivo_logico.tell() < tam_registro and encontrado == -1:
         posicion_actual = archivo_logico.tell()
-        registro:Estudiante | Administrador | Moderador = pickle.load(archivo_logico)
-        
+        registro: Estudiante | Administrador | Moderador = pickle.load(archivo_logico)
+    
         email_encontrado = registro.email.strip()
         password_encontrada = registro.contrasena.strip()
-        
+    
         if email_encontrado == email and password_encontrada == password:
-            if hasattr(registro, 'estado'):
+            try:
                 estado_normalizado = registro.estado.strip()
-                
                 if estado_normalizado == "true":
                     encontrado = posicion_actual
                     user_sesion.email = email_encontrado
-            else:
+            except AttributeError:
                 encontrado = posicion_actual
                 user_sesion.email = email_encontrado
                 
@@ -502,7 +501,7 @@ def fn_busquedasecuencial(archivo_logico: io.BufferedRandom, archivo_fisico: str
         pos = archivo_logico.tell()
         regtemporal = pickle.load(archivo_logico)
         if(str(getattr(regtemporal,campo)).strip() == str(data).strip()):
-            encontrado = True   
+            encontrado = True
 
     if(encontrado):
         return pos
@@ -523,9 +522,9 @@ def fn_busqueda_secu(archivo_logico: io.BufferedRandom, archivo_fisico: str, nom
         email_formateado = registro.email.strip()
         id_formateado = ""
         
-        if hasattr(registro, "id_estudiantes"):
+        try:
             id_formateado = registro.id_estudiantes.strip()
-        else:
+        except AttributeError:
             id_formateado = registro.id_moderador.strip()
         
         if nombre_formateado.lower() == nombre.lower() or int(id_formateado) == id or email_formateado == email:
@@ -546,7 +545,6 @@ def fn_busquedasecuencial_like(data:int | str):
         if(regtemporal.destinatario == data  and regtemporal.remitente == str(user_sesion.id)) :
             encontrado = True
                
-
     if(encontrado):
         return pos
     else:
@@ -2126,10 +2124,3 @@ def pr_inicializar_programa():
                 pr_pausar_consola()
 
 pr_inicializar_programa()
-
-# def debugger():
-#     pr_precarga_de_reportes()
-#     pr_precarga_de_registros()
-#     fn_reportes_estadisticos()
-    
-# debugger()
