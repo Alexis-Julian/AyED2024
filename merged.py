@@ -23,7 +23,7 @@ class Estudiante:
         self.nombre=""
         self.sexo =""
         self.contrasena=""
-        self.estado = False
+        self.estado = True
         self.hobbies=""
         self.materia_favorita=""
         self.deporte_favorito=""
@@ -259,9 +259,9 @@ def pr_verificar_usuario(email:str,contrasena:str) -> bool:
         LOGICO_ARCHIVO_ESTUDIANTES.seek(pos,0)
         reg_user = pickle.load(LOGICO_ARCHIVO_ESTUDIANTES)
         normalizar_estudiante(reg_user)
-
+        
         #Si todo es correcto pone el verificado en verdadero 
-        if (reg_user.contrasena == contrasena and reg_user.estado == "True"):
+        if (reg_user.contrasena == contrasena and reg_user.estado.lower() == "true"):
             verificado = True  
             user_sesion.id = reg_user.id_estudiantes
             user_sesion.nombre = reg_user.nombre
@@ -1225,6 +1225,9 @@ def pr_crear_estudiantes():
             case(4):
                 pr_tabla(columnas,estudiante_ram)
                 sexo = input("Ingrese su sexo: ")
+                while sexo == "":
+                    sexo = input("Error no puede tener sexo invsible: ")
+
                 estudiante_ram[0][3] = sexo
             case(5):
                 if estudiante_ram[0][0] and estudiante_ram[0][1] and estudiante_ram[0][2] and estudiante_ram[0][3]:
@@ -2081,8 +2084,7 @@ def pr_iniciar_sesion():
     email = input ("\nIngrese su correo electronico: ")
     contrasena = input("\nIngrese su contraseña: ")
     autenticado = pr_verificar_usuario(email,contrasena)
-    while (intento < 3 and not (autenticado)):
-        pr_limpiar_consola()
+    while (intento <= 3 and not (autenticado)) and email != "O" and contrasena != "O" :
         pr_crear_titulo("Iniciar sesion")
 
         print(f"\nEl email o la contraseña no fueron encontradas. Ingresos restantes: {3 - intento}")
