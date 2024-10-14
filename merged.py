@@ -2,7 +2,8 @@ import os
 import pickle 
 import io
 import shutil
-import time
+from datetime import datetime, timedelta
+
 from datetime import datetime
 import random
 import locale 
@@ -68,7 +69,7 @@ class Reporte:
         
 class Usuario:
     def __init__(self):
-        self.id = 4
+        self.id = 0
         self.email = ""
         self.nombre= ""
         self.role = ""
@@ -654,6 +655,37 @@ def obtener_letra_en_grande(letra, arte_ascii):
     
     return letra_en_grande
 
+
+
+#Variables propias de datetime.
+def validar_fecha(fecha):
+    try:
+        fecha = datetime.strptime(fecha, "%Y-%m-%d")
+        ahora = datetime.now()
+        fecha_limite1 = ahora - timedelta(days=18 * 365)
+        fecha_limite2 = ahora - timedelta(days=100 * 365)
+        if fecha > fecha_limite1 or fecha < fecha_limite2:
+            return False
+        return True
+    except ValueError:
+        return False
+
+
+#Variable tipo bool: (fecha_valida).
+def input_fecha(prompt):
+    fecha_valida = False
+    while not fecha_valida:
+        fecha_ingresada = input(prompt)
+        if fecha_ingresada != "":
+            if validar_fecha(fecha_ingresada):
+                fecha_valida = True
+            else:
+                print("Fecha de nacimiento inválida. Por favor, ingrese una fecha válida en el formato YYYY-MM-DD.")
+                print("")
+        else:
+            fecha_valida = True
+    return fecha_ingresada
+
 def fn_formatear_array(nuevo) -> list:
     descontar = 0
 
@@ -1011,9 +1043,9 @@ def fn_obtener_informacion_de_likes():
     M:list[Like] = [None]*len(all_likess)
     
     for i in range(0,len(all_likess)):
-        if(str(all_likess[i].remitente) == str(user_sesion.id)):
+        if(str(all_likess[i].remitente) == str(user_sesion.id) and all_likess[i].estado):
             R[i] =  all_likess[i]
-        elif(str(all_likess[i].destinatario) == str(user_sesion.id)):
+        elif(str(all_likess[i].destinatario) == str(user_sesion.id) and all_likess[i].estado):
             D[i] = all_likess[i]
 
     R=fn_formatear_array(R)
@@ -1021,7 +1053,7 @@ def fn_obtener_informacion_de_likes():
     
     for k in range(0,len(R)):
       for h in range(0,len(all_likess)):
-        if(R[k].destinatario == all_likess[h].remitente and R[k].remitente == all_likess[h].destinatario and R[k].remitente != all_likess[h].remitente):
+        if(R[k].destinatario == all_likess[h].remitente and R[k].remitente == all_likess[h].destinatario and R[k].remitente != all_likess[h].remitente and all_likess[i].estado):
             M[k] = R[k]
             matchs = matchs +1
 
@@ -1062,6 +1094,7 @@ def fn_verificar_si_existe_like(id_destinatario):
     reg_likes:list[Like] = fn_obtener_likes()
     indice = -1
     for i in range(0,len(reg_likes)):
+        print(reg_likes[i].estado,reg_likes[i].destinatario)
         if(reg_likes[i].destinatario == id_destinatario):
             #SI ESTO EXISTE SE VERA VERIFICAR QUE EL USUARIO DECIDA CAMBIAR A ESTADO DESCATIVADO
             indice = i
@@ -1074,24 +1107,24 @@ def fn_verificar_si_existe_like(id_destinatario):
 
 def pr_ver_candidatos():
     def fn_insertar_likes(est:list[Estudiante]):        
-        nuevo_array = [["" for _ in range(0,7)] for _ in range(0,len(est))]
+        estudiantes = [["" for _ in range(0,7)] for _ in range(0,len(est))]
         likes:list[Like]= fn_verificar_like()
-
+        print(likes)
         for i in range(0,len(est)):
-            nuevo_array[i][0] = est[i][0]
-            nuevo_array[i][1] = est[i][1]
-            nuevo_array[i][2] = est[i][2]
-            nuevo_array[i][3] = est[i][3]
-            nuevo_array[i][4] = est[i][4]
-            nuevo_array[i][5] = est[i][5]
-            nuevo_array[i][6] = "Sin like"
-
-        for h in range(0,len(nuevo_array)):
-            for t in range(0,len(likes)):
-
-                if(int(nuevo_array[h][5])-1 == int(likes[t].destinatario) and likes[t].estado):
-                    nuevo_array[h][6] = "Like dado"
-        return nuevo_array
+            estudiantes[i][0] = est[i][0] #NOMBRE
+            estudiantes[i][1] = est[i][1] # FECHA
+            estudiantes[i][2] = est[i][2] # BIOGRAFIA
+            estudiantes[i][3] = est[i][3] # HOBBIE
+            estudiantes[i][4] = est[i][4] # ULT.CONEXION
+            estudiantes[i][5] = est[i][5] # ID
+            estudiantes[i][6] = "Sin like"
+ 
+        for e in range(0,len(likes)):
+            for l in range(0,len(estudiantes)):
+                if(int(likes[e].destinatario) == int(estudiantes[l][5])-1 and likes[e].estado):
+                    estudiantes[l][6] = "Like dado"
+    
+        return estudiantes
 
     estudiantes = fn_obtener_registros_en_array(LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES,normalizar_estudiante)
     if(len(estudiantes) ==0):
@@ -1116,6 +1149,7 @@ def pr_ver_candidatos():
         nombre = input("\nIngrese un nombre valido con quien desea hacer match [S-Salir]: ")
         pos = fn_busquedasecuencial(LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES,"nombre",nombre)
 
+
     if(nombre == "S" ):
         return    
 
@@ -1125,6 +1159,8 @@ def pr_ver_candidatos():
 
     borro = False
     reg_likeado:Estudiante = fn_traer_registro(LOGICO_ARCHIVO_ESTUDIANTES,pos,normalizar_estudiante)
+    print(reg_likeado.nombre)
+    
     like_repetido = fn_verificar_si_existe_like(reg_likeado.id_estudiantes)
     if(len(like_repetido) > 0):
         #ENCONTRO UN LIKE
@@ -1158,6 +1194,7 @@ def pr_ver_candidatos():
 
         like.destinatario = reg_est.id_estudiantes
         like.remitente = user_sesion.id
+        like.estado = True
 
         fn_guardar_datos(like,LOGICO_ARCHIVO_LIKES,FISICO_ARCHIVO_LIKES,formatear_likes)        
     else:
@@ -1412,7 +1449,7 @@ def pr_editar_datos_personales():
                 ciudad = input("Ingrese su ciudad: ")
                 datos_personales[3] = ciudad
             case("e"):
-                fecha  = ""
+                fecha  = input_fecha("Ingrese Fecha de nacimiento (YYYY-MM-DD): ")
                 datos_personales[4] = fecha
             case ("f"):
                 pr_editar_datos_secundarios()       
@@ -2125,6 +2162,8 @@ def pr_inicializar_programa():
                 print("Gracias por estar con nosotros finalizando programa...\n")
                 pr_pausar_consola()
 
+
+#pr_ver_candidatos()
 pr_inicializar_programa()
 
 # def debugger():
