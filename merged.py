@@ -1189,18 +1189,18 @@ def pr_crear_estudiantes():
                 pr_tabla(columnas,estudiante_ram)                
 
                 contraseña =""
-                while len(contraseña) < 4 and contraseña != "S":
+                while len(contraseña) < 8 and contraseña != "S":
                     contraseña = input(f"[0]-{"Ver" if ver_contraseña else "Ocultar" } [S]-Volver || Ingrese su contraseña: ")
 
                     #SE LE VUELVE A PEDIR LA CONTRASEÑA AL USUARIO YA QUE NO CUMPLE CON LAS CONDICIONES
-                    if(len(contraseña) < 4 and contraseña != "0" and contraseña != "S" ):
+                    if(len(contraseña) < 8 and contraseña != "0" and contraseña != "S" ):
                         print("\nNecesita ingresar una contraseña mayor a 8 caracteres")
                         pr_pausar_consola()
                         pr_tabla(columnas,estudiante_ram)
 
                     
                     #SI INGRESA UNA CONTRASEÑA MAYOR A LA LONGITUD REQUERIDA
-                    if(len(contraseña) >= 4):
+                    if(len(contraseña) >= 8):
                         estudiante.contrasena = contraseña
                         estudiante_ram[0][1] = estudiante.contrasena
                         pr_tabla(columnas,estudiante_ram)
@@ -1241,6 +1241,7 @@ def pr_crear_estudiantes():
                         estudiante.sexo= sexo
                         estudiante.id_estudiantes= fn_buscar_cantidad_de_registros(LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES)
                         estudiante.ultima_conexion= datetime.now()
+                        estudiante.estado=True
                         fn_guardar_datos(estudiante,LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES,formatear_estudiantes)
                     else:
                         opc =-1
