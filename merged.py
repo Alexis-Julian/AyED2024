@@ -13,6 +13,74 @@ from getpass import getpass
 
 #--------------------------------------------------------------#
 #                                                              #
+#                         VARIABLES                            #
+#                                                              #
+#--------------------------------------------------------------#
+#   TIPO ENTERO
+#cant_moderadores: entero
+#cant_registros_admin: entero
+#cant_registros_estudiantes: entero
+#cant_registros_mod: entero
+#cantidad_registros: entero
+#contador: entero
+#descontar: entero
+#dia_actual: entero
+#dias: entero
+#email: entero
+#fin: entero
+#horas: entero
+#inicio: entero
+#INTENTO_LOGIN: entero
+#limite: entero
+#longitud: entero
+#mes_actual: entero
+#minutos: entero
+#medio: entero
+#numero: entero
+#opcion: entero
+#posicion: entero
+#segundos: entero
+#segundos_totales: entero
+#tam_archivo: entero
+#tam_usuarios: entero
+#tamañoarchivo: entero
+#t: entero
+#   TIPO CADENA
+#ART: cadena
+#ARTL: cadena
+#ARCHIVO_LOGICO: cadena
+#ARCHIVO_FISICO: cadena
+#ciudad: cadena
+#contraseña: cadena
+#data: cadena
+#fecha_nacimiento: cadena
+#FISICO_ARCHIVO_ADMINISTRADORES: cadena
+#FISICO_ARCHIVO_ESTUDIANTES: cadena
+#FISICO_ARCHIVO_LIKES: cadena
+#FISICO_ARCHIVO_MODERADORES: cadena
+#FISICO_ARCHIVO_REPORTES: cadena
+#LOGICO_ARCHIVO_ADMINISTRADORES: cadena
+#LOGICO_ARCHIVO_ESTUDIANTES: cadena
+#LOGICO_ARCHIVO_LIKES: cadena
+#LOGICO_ARCHIVO_MODERADORES: cadena
+#LOGICO_ARCHIVO_REPORTES: cadena
+#nombre: cadena
+#opcion: cadena
+#pais: cadena
+#password: cadena
+#sexo: cadena
+#ultima_conexion: cadena
+#   TIPO BOOLEANO
+#autenticado: booleano
+#encontrado: booleano
+#existe: booleano
+#login: booleano
+#vacio: booleano
+#verificado: booleano
+
+
+#--------------------------------------------------------------#
+#                                                              #
 #                CLASES                                        #
 #                                                              #
 #--------------------------------------------------------------#
@@ -129,6 +197,7 @@ ROLE_ADMINISTRADOR="A"
 #                ARCHIVOS                                      #
 #                                                              #
 #--------------------------------------------------------------#
+
 
 def fn_crear_logico(ruta: str):
     archivo_logico:io.BufferedRandom  # Inicialización explícita
@@ -474,19 +543,18 @@ def fn_validar_usuario(archivo_logico: io.BufferedRandom, archivo_fisico: str, e
     
     while archivo_logico.tell() < tam_registro and encontrado == -1:
         posicion_actual = archivo_logico.tell()
-        registro:Estudiante | Administrador | Moderador = pickle.load(archivo_logico)
-        
+        registro: Estudiante | Administrador | Moderador = pickle.load(archivo_logico)
+    
         email_encontrado = registro.email.strip()
         password_encontrada = registro.contrasena.strip()
-        
+    
         if email_encontrado == email and password_encontrada == password:
-            if hasattr(registro, 'estado'):
+            try:
                 estado_normalizado = registro.estado.strip()
-                
                 if estado_normalizado == "true":
                     encontrado = posicion_actual
                     user_sesion.email = email_encontrado
-            else:
+            except AttributeError:
                 encontrado = posicion_actual
                 user_sesion.email = email_encontrado
                 
@@ -503,7 +571,7 @@ def fn_busquedasecuencial(archivo_logico: io.BufferedRandom, archivo_fisico: str
         pos = archivo_logico.tell()
         regtemporal = pickle.load(archivo_logico)
         if(str(getattr(regtemporal,campo)).strip() == str(data).strip()):
-            encontrado = True   
+            encontrado = True
 
     if(encontrado):
         return pos
@@ -524,9 +592,9 @@ def fn_busqueda_secu(archivo_logico: io.BufferedRandom, archivo_fisico: str, nom
         email_formateado = registro.email.strip()
         id_formateado = ""
         
-        if hasattr(registro, "id_estudiantes"):
+        try:
             id_formateado = registro.id_estudiantes.strip()
-        else:
+        except AttributeError:
             id_formateado = registro.id_moderador.strip()
         
         if nombre_formateado.lower() == nombre.lower() or int(id_formateado) == id or email_formateado == email:
@@ -547,7 +615,6 @@ def fn_busquedasecuencial_like(data:int | str):
         if(regtemporal.destinatario == data  and regtemporal.remitente == str(user_sesion.id)) :
             encontrado = True
                
-
     if(encontrado):
         return pos
     else:
@@ -1267,7 +1334,7 @@ def pr_crear_estudiantes():
 
                 estudiante_ram[0][3] = sexo
             case(5):
-                if fn_verificar_array_vacio(estudiante_ram[0],3):
+                if estudiante_ram[0][0] and estudiante_ram[0][1] and estudiante_ram[0][2] and estudiante_ram[0][3]:
                     pr_tabla(columnas,estudiante_ram)
                     print(f"\n\n¿Desea guardar su datos? Los datos ha guardarse son los indicados arriba 🔼")
                     si_no = fn_validar_si_no()
@@ -1602,11 +1669,14 @@ def fn_desactivar_usuario():
             if pos_encontrado != -1:
                 LOGICO_ARCHIVO_ESTUDIANTES.seek(pos_encontrado)
                 
-                estudiante = pickle.load(LOGICO_ARCHIVO_ESTUDIANTES)
-                estudiante.estado = False
-                fn_guardar_datos(estudiante, LOGICO_ARCHIVO_ESTUDIANTES, FISICO_ARCHIVO_ESTUDIANTES, formatear_estudiantes, pos_encontrado)
-                
-                desactivado = True
+                estudiante:Estudiante = pickle.load(LOGICO_ARCHIVO_ESTUDIANTES)
+                if estudiante.estado.strip() == "False":
+                    print("El usuario ya se encuentra desactivado")
+                    pr_pausar_consola()
+                else:
+                    estudiante.estado = False
+                    fn_guardar_datos(estudiante, LOGICO_ARCHIVO_ESTUDIANTES, FISICO_ARCHIVO_ESTUDIANTES, formatear_estudiantes, pos_encontrado)
+                    desactivado = True
             
             else:
                 print("No se encontro usuario, intente nuevamente.")
@@ -2165,10 +2235,3 @@ def pr_inicializar_programa():
 
 #pr_ver_candidatos()
 pr_inicializar_programa()
-
-# def debugger():
-#     pr_precarga_de_reportes()
-#     pr_precarga_de_registros()
-#     fn_reportes_estadisticos()
-    
-# debugger()
