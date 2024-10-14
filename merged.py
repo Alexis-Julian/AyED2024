@@ -91,7 +91,7 @@ class Estudiante:
         self.nombre=""
         self.sexo =""
         self.contrasena=""
-        self.estado = False
+        self.estado = True
         self.hobbies=""
         self.materia_favorita=""
         self.deporte_favorito=""
@@ -328,9 +328,9 @@ def pr_verificar_usuario(email:str,contrasena:str) -> bool:
         LOGICO_ARCHIVO_ESTUDIANTES.seek(pos,0)
         reg_user = pickle.load(LOGICO_ARCHIVO_ESTUDIANTES)
         normalizar_estudiante(reg_user)
-
+        
         #Si todo es correcto pone el verificado en verdadero 
-        if (reg_user.contrasena == contrasena and reg_user.estado == "True"):
+        if (reg_user.contrasena == contrasena and reg_user.estado.lower() == "true"):
             verificado = True  
             user_sesion.id = reg_user.id_estudiantes
             user_sesion.nombre = reg_user.nombre
@@ -1258,18 +1258,18 @@ def pr_crear_estudiantes():
                 pr_tabla(columnas,estudiante_ram)                
 
                 contraseña =""
-                while len(contraseña) < 4 and contraseña != "S":
+                while len(contraseña) < 8 and contraseña != "S":
                     contraseña = input(f"[0]-{"Ver" if ver_contraseña else "Ocultar" } [S]-Volver || Ingrese su contraseña: ")
 
                     #SE LE VUELVE A PEDIR LA CONTRASEÑA AL USUARIO YA QUE NO CUMPLE CON LAS CONDICIONES
-                    if(len(contraseña) < 4 and contraseña != "0" and contraseña != "S" ):
+                    if(len(contraseña) < 8 and contraseña != "0" and contraseña != "S" ):
                         print("\nNecesita ingresar una contraseña mayor a 8 caracteres")
                         pr_pausar_consola()
                         pr_tabla(columnas,estudiante_ram)
 
                     
                     #SI INGRESA UNA CONTRASEÑA MAYOR A LA LONGITUD REQUERIDA
-                    if(len(contraseña) >= 4):
+                    if(len(contraseña) >= 8):
                         estudiante.contrasena = contraseña
                         estudiante_ram[0][1] = estudiante.contrasena
                         pr_tabla(columnas,estudiante_ram)
@@ -1294,9 +1294,12 @@ def pr_crear_estudiantes():
             case(4):
                 pr_tabla(columnas,estudiante_ram)
                 sexo = input("Ingrese su sexo: ")
+                while sexo == "":
+                    sexo = input("Error no puede tener sexo invsible: ")
+
                 estudiante_ram[0][3] = sexo
             case(5):
-                if fn_verificar_array_vacio(estudiante_ram[0],3):
+                if estudiante_ram[0][0] and estudiante_ram[0][1] and estudiante_ram[0][2] and estudiante_ram[0][3]:
                     pr_tabla(columnas,estudiante_ram)
                     print(f"\n\n¿Desea guardar su datos? Los datos ha guardarse son los indicados arriba 🔼")
                     si_no = fn_validar_si_no()
@@ -1307,6 +1310,7 @@ def pr_crear_estudiantes():
                         estudiante.sexo= sexo
                         estudiante.id_estudiantes= fn_buscar_cantidad_de_registros(LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES)
                         estudiante.ultima_conexion= datetime.now()
+                        estudiante.estado=True
                         fn_guardar_datos(estudiante,LOGICO_ARCHIVO_ESTUDIANTES,FISICO_ARCHIVO_ESTUDIANTES,formatear_estudiantes)
                     else:
                         opc =-1
@@ -2149,8 +2153,7 @@ def pr_iniciar_sesion():
     email = input ("\nIngrese su correo electronico: ")
     contrasena = input("\nIngrese su contraseña: ")
     autenticado = pr_verificar_usuario(email,contrasena)
-    while (intento < 3 and not (autenticado)):
-        pr_limpiar_consola()
+    while (intento <= 3 and not (autenticado)) and email != "O" and contrasena != "O" :
         pr_crear_titulo("Iniciar sesion")
 
         print(f"\nEl email o la contraseña no fueron encontradas. Ingresos restantes: {3 - intento}")
