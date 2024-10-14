@@ -12,6 +12,74 @@ from getpass import getpass
 
 #--------------------------------------------------------------#
 #                                                              #
+#                         VARIABLES                            #
+#                                                              #
+#--------------------------------------------------------------#
+#   TIPO ENTERO
+#cant_moderadores: entero
+#cant_registros_admin: entero
+#cant_registros_estudiantes: entero
+#cant_registros_mod: entero
+#cantidad_registros: entero
+#contador: entero
+#descontar: entero
+#dia_actual: entero
+#dias: entero
+#email: entero
+#fin: entero
+#horas: entero
+#inicio: entero
+#INTENTO_LOGIN: entero
+#limite: entero
+#longitud: entero
+#mes_actual: entero
+#minutos: entero
+#medio: entero
+#numero: entero
+#opcion: entero
+#posicion: entero
+#segundos: entero
+#segundos_totales: entero
+#tam_archivo: entero
+#tam_usuarios: entero
+#tamañoarchivo: entero
+#t: entero
+#   TIPO CADENA
+#ART: cadena
+#ARTL: cadena
+#ARCHIVO_LOGICO: cadena
+#ARCHIVO_FISICO: cadena
+#ciudad: cadena
+#contraseña: cadena
+#data: cadena
+#fecha_nacimiento: cadena
+#FISICO_ARCHIVO_ADMINISTRADORES: cadena
+#FISICO_ARCHIVO_ESTUDIANTES: cadena
+#FISICO_ARCHIVO_LIKES: cadena
+#FISICO_ARCHIVO_MODERADORES: cadena
+#FISICO_ARCHIVO_REPORTES: cadena
+#LOGICO_ARCHIVO_ADMINISTRADORES: cadena
+#LOGICO_ARCHIVO_ESTUDIANTES: cadena
+#LOGICO_ARCHIVO_LIKES: cadena
+#LOGICO_ARCHIVO_MODERADORES: cadena
+#LOGICO_ARCHIVO_REPORTES: cadena
+#nombre: cadena
+#opcion: cadena
+#pais: cadena
+#password: cadena
+#sexo: cadena
+#ultima_conexion: cadena
+#   TIPO BOOLEANO
+#autenticado: booleano
+#encontrado: booleano
+#existe: booleano
+#login: booleano
+#vacio: booleano
+#verificado: booleano
+
+
+#--------------------------------------------------------------#
+#                                                              #
 #                CLASES                                        #
 #                                                              #
 #--------------------------------------------------------------#
@@ -128,6 +196,7 @@ ROLE_ADMINISTRADOR="A"
 #                ARCHIVOS                                      #
 #                                                              #
 #--------------------------------------------------------------#
+
 
 def fn_crear_logico(ruta: str):
     archivo_logico:io.BufferedRandom  # Inicialización explícita
