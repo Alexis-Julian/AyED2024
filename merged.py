@@ -1632,11 +1632,14 @@ def fn_desactivar_usuario():
             if pos_encontrado != -1:
                 LOGICO_ARCHIVO_ESTUDIANTES.seek(pos_encontrado)
                 
-                estudiante = pickle.load(LOGICO_ARCHIVO_ESTUDIANTES)
-                estudiante.estado = False
-                fn_guardar_datos(estudiante, LOGICO_ARCHIVO_ESTUDIANTES, FISICO_ARCHIVO_ESTUDIANTES, formatear_estudiantes, pos_encontrado)
-                
-                desactivado = True
+                estudiante:Estudiante = pickle.load(LOGICO_ARCHIVO_ESTUDIANTES)
+                if estudiante.estado.strip() == "False":
+                    print("El usuario ya se encuentra desactivado")
+                    pr_pausar_consola()
+                else:
+                    estudiante.estado = False
+                    fn_guardar_datos(estudiante, LOGICO_ARCHIVO_ESTUDIANTES, FISICO_ARCHIVO_ESTUDIANTES, formatear_estudiantes, pos_encontrado)
+                    desactivado = True
             
             else:
                 print("No se encontro usuario, intente nuevamente.")
