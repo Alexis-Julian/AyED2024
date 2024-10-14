@@ -261,13 +261,14 @@ def pr_verificar_usuario(email:str,contrasena:str) -> bool:
         normalizar_estudiante(reg_user)
 
         #Si todo es correcto pone el verificado en verdadero 
-        if (reg_user.contrasena == contrasena and str(reg_user.estado).upper() != "B"):
+        if (reg_user.contrasena == contrasena and reg_user.estado == "True"):
             verificado = True  
             user_sesion.id = reg_user.id_estudiantes
             user_sesion.nombre = reg_user.nombre
             user_sesion.email = reg_user.email
             user_sesion.role= ROLE_USUARIO
             user_sesion.estado = True
+        
         return verificado 
         
 
@@ -280,7 +281,7 @@ def pr_verificar_usuario(email:str,contrasena:str) -> bool:
         LOGICO_ARCHIVO_MODERADORES.seek(pos,0)
         reg_moderador:Moderador = pickle.load(LOGICO_ARCHIVO_MODERADORES)
         
-        if((reg_moderador.contrasena).strip() == contrasena):
+        if((reg_moderador.contrasena).strip() == contrasena and reg_moderador.estado.strip() == "true"):
             verificado = True
             user_sesion.id=reg_moderador.id_moderador
             user_sesion.email= reg_moderador.email
