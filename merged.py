@@ -261,7 +261,7 @@ def pr_verificar_usuario(email:str,contrasena:str) -> bool:
         normalizar_estudiante(reg_user)
 
         #Si todo es correcto pone el verificado en verdadero 
-        if (reg_user.contrasena == contrasena and reg_user.estado == "True"):
+        if (reg_user.contrasena == contrasena and reg_user.estado.lower() == "true"):
             verificado = True  
             user_sesion.id = reg_user.id_estudiantes
             user_sesion.nombre = reg_user.nombre
