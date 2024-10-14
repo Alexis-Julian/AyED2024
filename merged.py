@@ -1665,7 +1665,7 @@ def fn_ver_reportes():
         reportado_estado = reportado.estado.strip()
         
         #MODERADOR
-        mod_pos = fn_busqueda_secu(LOGICO_ARCHIVO_MODERADORES, FISICO_ARCHIVO_MODERADORES, "", "", user_sesion.email)
+        mod_pos = fn_busqueda_secu(LOGICO_ARCHIVO_MODERADORES, FISICO_ARCHIVO_MODERADORES, "", "", user_sesion.email.strip())
         LOGICO_ARCHIVO_MODERADORES.seek(mod_pos)
         moderador:Moderador = pickle.load(LOGICO_ARCHIVO_MODERADORES)
         
@@ -2104,6 +2104,7 @@ def pr_registrarse():
 
 def pr_inicializar_programa():
     pr_precarga_de_registros()
+    # pr_precarga_de_reportes()
     
     opc = -1
     while opc != 0:
