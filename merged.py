@@ -1227,7 +1227,7 @@ def pr_crear_estudiantes():
                 sexo = input("Ingrese su sexo: ")
                 estudiante_ram[0][3] = sexo
             case(5):
-                if fn_verificar_array_vacio(estudiante_ram[0],3):
+                if estudiante_ram[0][0] and estudiante_ram[0][1] and estudiante_ram[0][2] and estudiante_ram[0][3]:
                     pr_tabla(columnas,estudiante_ram)
                     print(f"\n\n¿Desea guardar su datos? Los datos ha guardarse son los indicados arriba 🔼")
                     si_no = fn_validar_si_no()
