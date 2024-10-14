@@ -23,7 +23,7 @@ class Estudiante:
         self.nombre=""
         self.sexo =""
         self.contrasena=""
-        self.estado = False
+        self.estado = True
         self.hobbies=""
         self.materia_favorita=""
         self.deporte_favorito=""
@@ -259,7 +259,7 @@ def pr_verificar_usuario(email:str,contrasena:str) -> bool:
         LOGICO_ARCHIVO_ESTUDIANTES.seek(pos,0)
         reg_user = pickle.load(LOGICO_ARCHIVO_ESTUDIANTES)
         normalizar_estudiante(reg_user)
-
+        
         #Si todo es correcto pone el verificado en verdadero 
         if (reg_user.contrasena == contrasena and reg_user.estado.lower() == "true"):
             verificado = True  
@@ -1225,6 +1225,9 @@ def pr_crear_estudiantes():
             case(4):
                 pr_tabla(columnas,estudiante_ram)
                 sexo = input("Ingrese su sexo: ")
+                while sexo == "":
+                    sexo = input("Error no puede tener sexo invsible: ")
+
                 estudiante_ram[0][3] = sexo
             case(5):
                 if fn_verificar_array_vacio(estudiante_ram[0],3):
